@@ -14,6 +14,10 @@ def preprocess():
     # X_text, Y, _, _ = data.load_data_and_labels_from_csv(dataset="yelp_review_polarity")
     # print("Y:", Y[:10])
     X_1, X_2, Y = data.load_quora_data()
+    print("X_1.size:", len(X_1))
+    print("X_2.size:", len(X_2))
+    print("Y.size:", len(Y))
+
     X_merged = X_1.append(X_2)
     n_len = len(X_merged)
 
