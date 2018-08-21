@@ -45,8 +45,8 @@ def preprocess():
     print("Shuffle the data.")
     np.random.seed(10)
     shuffle_indices = np.random.permutation(np.arange(len(Y)))
-    x1_shuffled = X_1[shuffle_indices]
-    x2_shuffled = X_1[shuffle_indices]
+    x1_shuffled = X1[shuffle_indices]
+    x2_shuffled = X2[shuffle_indices]
     y_shuffled = Y[shuffle_indices]
 
     # Split train/test set
