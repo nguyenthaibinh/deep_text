@@ -18,7 +18,9 @@ def preprocess():
     print("X_2.size:", len(X_2))
     print("Y.size:", len(Y))
 
-    X_merged = X_1.append(X_2)
+    X_merged = []
+    X_merged.extend(X_1)
+    X_merged.extend(X_2)
     n_len = len(X_merged)
 
     print("Map sentences to sequence of word id.")
