@@ -37,9 +37,9 @@ def preprocess():
     X2 = X_merged[int(n_len / 2):]
     Y = np.array(Y)
 
-    print("X_1.size:", X1.size())
-    print("X_2.size:", X2.size())
-    print("Y.size:", Y.size())
+    print("X_1.size:", X1.shape)
+    print("X_2.size:", X2.shape)
+    print("Y.size:", Y.shape)
 
     # Shuffle the data
     print("Shuffle the data.")
