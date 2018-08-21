@@ -3,8 +3,6 @@ import torch
 from torch import optim
 import numpy as np
 import data
-from models.cnntext import TextCNN, TextCNN1D
-from models.textnet import TextNet
 from torch.autograd import Variable
 import torch.nn.functional as F
 import argparse
