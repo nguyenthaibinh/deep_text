@@ -230,6 +230,9 @@ def main(argv=None):
     if torch.cuda.is_available():
         model = model.cuda()
 
+    print("train.size:", x1_train.shape[0])
+    print("test.size:", x1_dev.shape[0])
+
     train(model, x1_train, x2_train, y_train, vocab_processor,
           x1_dev, x2_dev, y_dev, args)
 
