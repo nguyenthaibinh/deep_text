@@ -104,7 +104,6 @@ def train(model, x1_train, x2_train, y_train, vocab_processor,
 
             # Gradient descent
             optimizer.zero_grad()
-            # losses = loss_func(probs, y_batch)
             loss = loss_func(preds, y_batch)
             loss.backward()
             optimizer.step()
@@ -131,6 +130,7 @@ def train(model, x1_train, x2_train, y_train, vocab_processor,
 
 def eval(model, x1_dev, x2_dev, y_dev, batch_size):
     model.eval()
+    loss_func = nn.BCELoss(weight=None, size_average=False)
 
     running_losses = []
 
@@ -148,7 +148,7 @@ def eval(model, x1_dev, x2_dev, y_dev, batch_size):
             y_batch = y_batch.cuda()
 
         preds = model(x1_batch, x2_batch)
-        loss = F.cross_entropy(preds, y_batch)
+        loss = loss_func(preds, y_batch)
         running_losses.append(loss.data[0].item())
 
     avg_loss = sum(running_losses) / len(running_losses)
