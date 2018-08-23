@@ -174,7 +174,7 @@ def eval(model, x1_dev, x2_dev, y_dev, batch_size, verbose=False):
 
     size = len(x1_dev)
     avg_loss = sum(running_losses) / len(running_losses)
-    accuracy = (100.0 * corrects / size)
+    accuracy = (1.0 * corrects / size)
 
     return avg_loss, accuracy
 
