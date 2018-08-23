@@ -169,6 +169,7 @@ def eval(model, x1_dev, x2_dev, y_dev, batch_size, verbose=False):
 
         y_truth = y_batch.byte()
 
+        classes = torch.unsqueeze(classes, -1)
         tmp_corrects = (classes.data == y_truth.data).sum()
         corrects += tmp_corrects
 
