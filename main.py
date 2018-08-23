@@ -114,8 +114,8 @@ def train(model, x1_train, x2_train, y_train, vocab_processor,
             tmp_loss += loss.data[0].item()
             running_losses.append(loss.data[0].item())
 
-            print("classes:", classes)
-            print("y_batch:", y_batch)
+            print("classes:", classes.data)
+            print("y_batch:", y_batch.data)
 
             return
 
