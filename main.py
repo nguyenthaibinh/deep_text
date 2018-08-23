@@ -87,11 +87,9 @@ def train(model, x1_train, x2_train, y_train, vocab_processor,
             x2_batch = Variable(torch.LongTensor(x2_batch))
             y_batch = Variable(torch.LongTensor(y_batch))
 
-            """
             print("x1_batch.size:", x1_batch.size())
             print("x2_batch.size:", x2_batch.size())
             print("y_batch.size:", y_batch.size())
-            """
 
             if torch.cuda.is_available():
                 x1_batch = x1_batch.cuda()
@@ -99,6 +97,8 @@ def train(model, x1_train, x2_train, y_train, vocab_processor,
                 y_batch = y_batch.cuda()
 
             preds = model(x1_batch, x2_batch)
+
+            print("preds.size:", preds.size())
 
             # Gradient descent
             optimizer.zero_grad()
