@@ -132,10 +132,10 @@ def train(model, x1_train, x2_train, y_train, vocab_processor,
         train_loss, train_acc = eval(model, x1_train, x2_train, y_train, batch_size)
         dev_loss, dev_acc = eval(model, x1_dev, x2_dev, y_dev, batch_size)
 
-        print("Epoch: {}, loss: {}, train_acc: {}, dev_acc: {}".format(epoch + 1,
-                                                                       epoch_loss,
-                                                                       train_acc,
-                                                                       dev_acc))
+        print("Epoch: {}, loss: {:.4f}, train_acc: {:.4f}, dev_acc: {:.4f}".format(epoch + 1,
+                                                                                   epoch_loss,
+                                                                                   train_acc,
+                                                                                   dev_acc))
         if (epoch + 1) % args.checkpoint_interval == 0:
             model_name = model.__class__.__name__
             save(model, save_dir=args.save_dir,
