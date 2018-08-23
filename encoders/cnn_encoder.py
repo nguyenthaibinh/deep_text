@@ -136,4 +136,6 @@ class DualCNN(nn.Module):
 
 		preds = F.sigmoid(dot_prod)
 
-		return preds
+		classes = (preds >= 0.5)
+
+		return preds, classes

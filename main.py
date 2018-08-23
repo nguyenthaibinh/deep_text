@@ -114,12 +114,15 @@ def train(model, x1_train, x2_train, y_train, vocab_processor,
             tmp_loss += loss.data[0].item()
             running_losses.append(loss.data[0].item())
 
-        train_loss = sum(running_losses) / len(running_losses)
-        dev_loss = eval(model, x1_dev, x2_dev, y_dev, batch_size)
+        epoch_loss = sum(running_losses) / len(running_losses)
 
-        print("Epoch: {}, train_loss: {}, dev_loss: {}.".format(epoch + 1,
-                                                                train_loss,
-                                                                dev_loss))
+        train_loss, train_acc = eval(model, x1_train, x2_train, y_train, batch_size)
+        dev_loss, dev_acc = eval(model, x1_dev, x2_dev, y_dev, batch_size)
+
+        print("Epoch: {}, loss: {}, train_acc: {}, dev_acc: {}".format(epoch + 1,
+                                                                       epoch_loss,
+                                                                       train_acc,
+                                                                       dev_acc))
         if (epoch + 1) % args.checkpoint_interval == 0:
             model_name = model.__class__.__name__
             save(model, save_dir=args.save_dir,
@@ -132,6 +135,7 @@ def eval(model, x1_dev, x2_dev, y_dev, batch_size):
     model.eval()
     loss_func = nn.BCELoss(weight=None, size_average=False)
 
+    corrects = 0.0
     running_losses = []
 
     batches = data.batch_iter(list(zip(x1_dev, x2_dev, y_dev)), batch_size)
@@ -146,13 +150,18 @@ def eval(model, x1_dev, x2_dev, y_dev, batch_size):
             x2_batch = x2_batch.cuda()
             y_batch = y_batch.cuda()
 
-        preds = model(x1_batch, x2_batch)
+        preds, classes = model(x1_batch, x2_batch)
         loss = loss_func(preds, y_batch)
         running_losses.append(loss.data[0].item())
 
-    avg_loss = sum(running_losses) / len(running_losses)
+        tmp_corrects = (classes.data == y_batch.data).sum()
+        corrects += tmp_corrects
 
-    return avg_loss
+    size = len(x1_dev)
+    avg_loss = sum(running_losses) / len(running_losses)
+    accuracy = (100.0 * corrects / size)
+
+    return avg_loss, accuracy
 
 
 def save(model, save_dir, save_prefix, model_name, steps):

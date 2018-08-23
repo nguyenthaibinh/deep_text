@@ -99,4 +99,6 @@ class DualMean(nn.Module):
 		dot_prod = (h1 * h2).sum(dim=1)
 		preds = F.sigmoid(dot_prod)
 
-		return preds
+		classes = (preds >= 0.5)
+
+		return preds, classes
