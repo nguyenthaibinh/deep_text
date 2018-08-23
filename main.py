@@ -101,7 +101,7 @@ def train(model, x1_train, x2_train, y_train, vocab_processor,
                 x2_batch = x2_batch.cuda()
                 y_batch = y_batch.cuda()
 
-            preds = model(x1_batch, x2_batch)
+            preds, classes = model(x1_batch, x2_batch)
 
             # print("preds.size:", preds.size())
 
