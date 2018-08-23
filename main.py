@@ -116,6 +116,8 @@ def train(model, x1_train, x2_train, y_train, vocab_processor,
 
             print("classes:", classes.data)
             print("y_batch:", y_batch.data)
+            print("type(classes):", type(classes))
+            print("type(y_batch):", type(y_batch))
 
         epoch_loss = sum(running_losses) / len(running_losses)
 
