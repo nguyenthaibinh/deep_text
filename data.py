@@ -14,6 +14,7 @@ def load_quora_data(top=0):
 	df = df.dropna()
 
 	n_len = df.shape[0]
+	print("n_len:", n_len)
 
 	if isinstance(top, int) and (top > 0) and (top < n_len):
 		print("Get top {} rows of the quora.".format(top))
