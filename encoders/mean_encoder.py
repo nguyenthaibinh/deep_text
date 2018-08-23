@@ -18,8 +18,10 @@ class DualMean(nn.Module):
 		if word_vectors is None:
 			print("Use one-hot word vectors.")
 			# Create embedding and context vectors
-			self.embeddings = nn.Embedding(vocab_size, self.embed_size, padding_idx=0)
-			self.contexts = nn.Embedding(vocab_size, self.embed_size, padding_idx=0)
+			self.embeddings = nn.Embedding(vocab_size, self.embed_size,
+			                               padding_idx=0)
+			self.contexts = nn.Embedding(vocab_size, self.embed_size,
+			                             padding_idx=0)
 
 			# Initialize embedding and context vectors
 			nn.init.normal_(self.embeddings.weight, mean=0.0, std=0.01)
@@ -30,12 +32,16 @@ class DualMean(nn.Module):
 			word_vectors = torch.FloatTensor(word_vectors)
 
 			# Create embedding and context vectors
-			self.embeddings = nn.Embedding(vocab_size, self.embed_size, padding_idx=0)
-			self.contexts = nn.Embedding(vocab_size, self.embed_size, padding_idx=0)
+			self.embeddings = nn.Embedding(vocab_size, self.embed_size,
+			                               padding_idx=0)
+			self.contexts = nn.Embedding(vocab_size, self.embed_size,
+			                             padding_idx=0)
 
 			# Load pre-trained word vectors
-			self.embeddings.weight = nn.Parameter(word_vectors, requires_grad=False)
-			self.contexts.weight = nn.Parameter(word_vectors, requires_grad=False)
+			self.embeddings.weight = nn.Parameter(word_vectors,
+			                                      requires_grad=False)
+			self.contexts.weight = nn.Parameter(word_vectors,
+			                                    requires_grad=False)
 
 		# Create embedding encoder
 		self.embedding_fc1 = nn.Linear(self.embed_size, self.embed_size)
