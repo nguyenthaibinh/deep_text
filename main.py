@@ -118,6 +118,8 @@ def train(model, x1_train, x2_train, y_train, vocab_processor,
 
             print("classes:", classes.data)
             print("y_batch:", y_batch.data)
+            print("y_truth:", y_truth.data)
+
             print("type(classes):", type(classes))
             print("type(y_batch):", type(y_batch))
             print("type(y_truth):", type(y_truth))
@@ -162,7 +164,9 @@ def eval(model, x1_dev, x2_dev, y_dev, batch_size, verbose=False):
         loss = loss_func(preds, y_batch)
         running_losses.append(loss.data[0].item())
 
-        tmp_corrects = (classes.data == y_batch.data).sum()
+        y_truth = y_batch.byte()
+
+        tmp_corrects = (classes.data == y_truth.data).sum()
         corrects += tmp_corrects
 
     size = len(x1_dev)
