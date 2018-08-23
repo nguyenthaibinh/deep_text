@@ -96,7 +96,8 @@ class DualMean(nn.Module):
 
 	def forward(self, x1, x2):
 		h1 = self.embedding_encode(x1)
-		h2 = self.context_encode(x2)
+		h2 = self.embedding_encode(x2)
+		# h2 = self.context_encode(x2)
 
 		dot_prod = (h1 * h2).sum(dim=1)
 		preds = F.sigmoid(dot_prod)
