@@ -40,7 +40,7 @@ class DualCNN(nn.Module):
 			self.contexts.weight = nn.Parameter(word_vectors, requires_grad=False)
 
 		# Create embedding encoder
-		self.embedding_encoder = nn.ModuleList(
+		self.embedding_convs = nn.ModuleList(
 		                        [nn.Conv1d(in_channels=self.embed_size,
 		                                   out_channels=num_filters,
 		                                   kernel_size=filter_size)
@@ -55,7 +55,7 @@ class DualCNN(nn.Module):
 		nn.init.normal_(self.embedding_fc2.weight, mean=0.0, std=0.01)
 
 		# Create context encoder
-		self.context_encoder = nn.ModuleList(
+		self.context_convs = nn.ModuleList(
 		                        [nn.Conv1d(in_channels=self.embed_size,
 		                                   out_channels=num_filters,
 		                                   kernel_size=filter_size)
@@ -91,7 +91,7 @@ class DualCNN(nn.Module):
 		h = h.transpose(1, 2)
 
 		feature_list = []
-		for conv in self.convs:
+		for conv in self.embedding_convs:
 			h = torch.tanh(conv(h))
 			h = F.max_pool1d(h, h.size(2))
 			feature_list.append(h)
@@ -108,7 +108,7 @@ class DualCNN(nn.Module):
 		h = h.transpose(1, 2)
 
 		feature_list = []
-		for conv in self.convs:
+		for conv in self.context_convs:
 			h = torch.tanh(conv(h))
 			h = F.max_pool1d(h, h.size(2))
 			feature_list.append(h)
