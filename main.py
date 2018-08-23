@@ -209,7 +209,7 @@ def parse_args():
                         help='enables CUDA training')
     parser.add_argument('--one-encoder', action='store_true', default=False,
                         help='use one encoder')
-    parser.add_argument('--dot-prod', action='store_true', default=True,
+    parser.add_argument('--dot-prod', action='store_true', default=False,
                         help='use dot product at the last layer')
     parser.add_argument('--model', type=str, default="cnn",
                         help='the embedding model')
@@ -250,13 +250,15 @@ def main(argv=None):
                         word_vectors=word_vectors,
                         filter_sizes=[3, 4, 5],
                         num_filters=args.num_filters,
-                        l2_reg=0.01)
+                        l2_reg=0.01, one_encoder=args.one_encoder,
+                        dot_prod=args.dot_prod)
     elif args.model == "mean":
         model = DualMean(sequence_length=x1_train.shape[1], num_classes=2,
                          vocab_size=len(vocab_processor.vocabulary_),
                          embed_size=args.embed_size,
                          word_vectors=word_vectors,
-                         l2_reg=0.01)
+                         l2_reg=0.01, one_encoder=args.one_encoder,
+                         dot_prod=args.dot_prod)
     else:
         print("Wrong model!")
         return 0

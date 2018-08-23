@@ -7,7 +7,7 @@ class DualCNN(nn.Module):
 	def __init__(self, sequence_length, vocab_size, embed_size,
 	             filter_sizes, num_filters, word_vectors=None,
 	             num_classes=2, l2_reg=0.0, dropout=0.5,
-	             n_encoders=2, dot_prod=True):
+	             one_encoder=False, dot_prod=False):
 		super(DualCNN, self).__init__()
 		self.sequence_length = sequence_length
 		self.vocab_size = vocab_size
@@ -16,7 +16,7 @@ class DualCNN(nn.Module):
 		self.num_filters = num_filters
 		self.num_classes = num_classes
 		self.l2_reg = l2_reg
-		self.n_encoders = n_encoders
+		self.one_encoder = one_encoder
 		self.dot_prod = dot_prod
 
 		# Embedding layer
@@ -95,7 +95,7 @@ class DualCNN(nn.Module):
 		print("num_filters:", self.num_filters)
 		print("num_classes:", self.num_classes)
 		print("l2_reg:", self.l2_reg)
-		print("n_encoders:", self.n_encoders)
+		print("one_encoder:", self.one_encoder)
 		print("dot_prod:", self.dot_prod)
 
 	def embedding_encode(self, x):
@@ -139,7 +139,7 @@ class DualCNN(nn.Module):
 	def forward(self, x1, x2):
 		h1 = self.embedding_encode(x1)
 
-		if self.n_encoders == 1:
+		if self.one_encoder is True:
 			h2 = self.embedding_encode(x2)
 		else:
 			h2 = self.context_encode(x2)
