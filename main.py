@@ -112,15 +112,12 @@ def train(model, x1_train, x2_train, y_train, vocab_processor,
             tmp_loss += loss.data[0].item()
             running_losses.append(loss.data[0].item())
 
-        epoch_loss = sum(running_losses) / len(running_losses)
-        dev_loss, dev_accuracy = eval(model, x1_dev, x2_dev, y_dev,
-                                      batch_size)
-        train_loss, train_accuracy = eval(model, x1_train, x2_train, y_train,
-                                          batch_size)
-        print("Epoch: {}, loss: {}, train_accuracy: {:.4f}, dev_accuracy: {:.4f}".format(epoch + 1,
-                                                                                 epoch_loss,
-                                                                                 train_accuracy,
-                                                                                 dev_accuracy))
+        train_loss = sum(running_losses) / len(running_losses)
+        dev_loss = eval(model, x1_dev, x2_dev, y_dev, batch_size)
+
+        print("Epoch: {}, train_loss: {}, dev_loss: {}.".format(epoch + 1,
+                                                                train_loss,
+                                                                dev_loss))
         if (epoch + 1) % args.checkpoint_interval == 0:
             model_name = model.__class__.__name__
             save(model, save_dir=args.save_dir,
