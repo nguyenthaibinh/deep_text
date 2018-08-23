@@ -1,5 +1,6 @@
 from tensorflow.contrib import learn
 import torch
+from torch import nn
 from torch import optim
 import numpy as np
 import data
@@ -71,6 +72,7 @@ def preprocess(top=0):
 def train(model, x1_train, x2_train, y_train, vocab_processor,
           x1_dev, x2_dev, y_dev, args):
     optimizer = optim.Adam(model.parameters(), lr=args.lr)
+    loss_func = nn.BCELoss(weight=None, size_average=False)
 
     model.train()
     for epoch in range(args.epochs):
@@ -103,12 +105,12 @@ def train(model, x1_train, x2_train, y_train, vocab_processor,
             # Gradient descent
             optimizer.zero_grad()
             # losses = loss_func(probs, y_batch)
-            losses = F.cross_entropy(preds, y_batch)
-            losses.backward()
+            loss = loss_func(preds, y_batch)
+            loss.backward()
             optimizer.step()
 
-            tmp_loss += losses.data[0].item()
-            running_losses.append(losses.data[0].item())
+            tmp_loss += loss.data[0].item()
+            running_losses.append(loss.data[0].item())
 
         epoch_loss = sum(running_losses) / len(running_losses)
         dev_loss, dev_accuracy = eval(model, x1_dev, x2_dev, y_dev,
