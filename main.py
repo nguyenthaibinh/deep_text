@@ -140,7 +140,7 @@ def eval(model, x1_dev, x2_dev, y_dev, batch_size):
         x1_batch, x2_batch, y_batch = zip(*batch)
         x1_batch = Variable(torch.LongTensor(x1_batch))
         x2_batch = Variable(torch.LongTensor(x2_batch))
-        y_batch = Variable(torch.LongTensor(y_batch))
+        y_batch = Variable(torch.FloatTensor(y_batch))
 
         if torch.cuda.is_available():
             x1_batch = x1_batch.cuda()
