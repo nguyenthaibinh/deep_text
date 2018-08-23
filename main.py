@@ -71,7 +71,8 @@ def preprocess(top=0):
 
 def train(model, x1_train, x2_train, y_train, vocab_processor,
           x1_dev, x2_dev, y_dev, args):
-    optimizer = optim.Adam(model.parameters(), lr=args.lr)
+    optimizer = optim.Adam(model.parameters(), lr=args.lr,
+                           weight_decay=args.l2)
     loss_func = nn.BCELoss(weight=None, size_average=False)
     batch_size = int(args.batch_size)
 
@@ -198,6 +199,8 @@ def parse_args():
                         help='number of step to save the model (default: 50)')
     parser.add_argument('--lr', type=float, default=0.01, metavar='LR',
                         help='learning rate (default: 0.01)')
+    parser.add_argument('--l2', type=float, default=0.01, metavar='LR',
+                        help='l2 regularization term (default: 0.01)')
     parser.add_argument('--embed-size', type=int, default=128, metavar='N',
                         help='the dimensionality of the embedding space (default: 128)')
     parser.add_argument('--num-filters', type=int, default=128, metavar='N',
