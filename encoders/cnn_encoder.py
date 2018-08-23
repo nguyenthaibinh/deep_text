@@ -96,7 +96,7 @@ class DualCNN(nn.Module):
 
 		feature_list = []
 		for conv in self.embedding_convs:
-			h = torch.tanh(conv(features))
+			h = F.relu(conv(features))
 			h = F.max_pool1d(h, h.size(2))
 			feature_list.append(h)
 
@@ -105,7 +105,7 @@ class DualCNN(nn.Module):
 		h = self.embedding_dropout(h)
 
 		h = torch.tanh(self.embedding_fc1(h))
-		h = torch.tanh(self.embedding_fc2(h))
+		# h = torch.tanh(self.embedding_fc2(h))
 
 		return h
 
@@ -115,7 +115,7 @@ class DualCNN(nn.Module):
 
 		feature_list = []
 		for conv in self.context_convs:
-			h = torch.tanh(conv(features))
+			h = F.relu(conv(features))
 			h = F.max_pool1d(h, h.size(2))
 			feature_list.append(h)
 
@@ -124,7 +124,7 @@ class DualCNN(nn.Module):
 		h = self.context_dropout(h)
 
 		h = torch.tanh(self.context_fc1(h))
-		h = torch.tanh(self.context_fc2(h))
+		# h = torch.tanh(self.context_fc2(h))
 
 		return h
 

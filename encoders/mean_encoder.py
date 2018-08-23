@@ -74,9 +74,10 @@ class DualMean(nn.Module):
 
 		# Calculate mean vector
 		h = torch.mean(h, dim=1)
+		h = torch.tanh(h)
 		# print("h.size:", h.size())
 		h = torch.tanh(self.embedding_fc1(h))
-		h = torch.tanh(self.embedding_fc2(h))
+		# h = torch.tanh(self.embedding_fc2(h))
 
 		return h
 
@@ -86,9 +87,10 @@ class DualMean(nn.Module):
 
 		# Calculate mean vector
 		h = torch.mean(h, dim=1)
+		h = torch.tanh(h)
 		# print("h.size:", h.size())
 		h = torch.tanh(self.context_fc1(h))
-		h = torch.tanh(self.context_fc2(h))
+		# h = torch.tanh(self.context_fc2(h))
 
 		return h
 

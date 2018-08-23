@@ -111,8 +111,8 @@ def train(model, x1_train, x2_train, y_train, vocab_processor,
             loss.backward()
             optimizer.step()
 
-            tmp_loss += loss.data[0].item()
-            running_losses.append(loss.data[0].item())
+            tmp_loss += loss.item()
+            running_losses.append(loss.item())
 
             """
             y_truth = y_batch.byte()
@@ -164,7 +164,7 @@ def eval(model, x1_dev, x2_dev, y_dev, batch_size, verbose=False):
 
         preds, classes = model(x1_batch, x2_batch)
         loss = loss_func(preds, y_batch)
-        running_losses.append(loss.data[0].item())
+        running_losses.append(loss.item())
 
         y_truth = y_batch.byte()
 
