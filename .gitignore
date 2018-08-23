@@ -1,0 +1,10 @@
+*.sh
+*.txt
+*.bin
+*.csv
+datasets/*
+*.pyc
+*.gz
+*.zip
+*.tar
+
