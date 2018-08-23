@@ -7,6 +7,8 @@ from torch.autograd import Variable
 import torch.nn.functional as F
 import argparse
 import os
+from encoders.cnn_encoder import DualCNN
+from encoders.mean_encoder import DualMean
 
 
 def preprocess():
@@ -63,14 +65,167 @@ def preprocess():
     return x1_train, x2_train, y_train, vocab_processor, x1_dev, x2_dev, y_dev
 
 
+def train(model, x1_train, x2_train, y_train, vocab_processor,
+          x1_dev, x2_dev, y_dev, args):
+    optimizer = optim.Adam(model.parameters(), lr=args.lr)
+
+    model.train()
+    for epoch in range(args.epochs):
+        running_losses = []
+
+        tmp_loss = 0
+
+        # Generate batch
+        batches = data.batch_iter(list(zip(x1_train, x2_train, y_train)),
+                                  args.batch_size)
+        for batch in batches:
+            x1_batch, x2_batch, y_batch = zip(*batch)
+            x1_batch = Variable(torch.LongTensor(x1_batch))
+            x2_batch = Variable(torch.LongTensor(x2_batch))
+            y_batch = Variable(torch.LongTensor(y_batch))
+
+            if torch.cuda.is_available():
+                x1_batch = x1_batch.cuda()
+                x2_batch = x2_batch.cuda()
+                y_batch = y_batch.cuda()
+
+            preds = model(x1_batch, x2_batch)
+
+            # Gradient descent
+            optimizer.zero_grad()
+            # losses = loss_func(probs, y_batch)
+            losses = F.cross_entropy(preds, y_batch)
+            losses.backward()
+            optimizer.step()
+
+            tmp_loss += losses.data[0].item()
+            running_losses.append(losses.data[0].item())
+
+        epoch_loss = sum(running_losses) / len(running_losses)
+        dev_loss, dev_accuracy = eval(model, x1_dev, x2_dev, y_dev,
+                                      args.batch_size)
+        train_loss, train_accuracy = eval(model, x1_train, x2_train, y_train,
+                                          args.batch_size)
+        print("Epoch: {}, loss: {}, train_accuracy: {:.4f}, dev_accuracy: {:.4f}".format(epoch + 1,
+                                                                                 epoch_loss,
+                                                                                 train_accuracy,
+                                                                                 dev_accuracy))
+        if (epoch + 1) % args.checkpoint_interval == 0:
+            model_name = model.__class__.__name__
+            save(model, save_dir=args.save_dir,
+                 save_prefix="snapshot", model_name=model_name,
+                 steps=epoch + 1)
+    return 0
+
+
+def eval(model, x1_dev, x2_dev, y_dev, batch_size):
+    model.eval()
+
+    running_losses = []
+
+    batches = data.batch_iter(list(zip(x1_dev, x2_dev, y_dev)),
+                              batch_size)
+    for batch in batches:
+        x1_batch, x2_batch, y_batch = zip(*batch)
+        x1_batch = Variable(torch.LongTensor(x1_batch))
+        x2_batch = Variable(torch.LongTensor(x2_batch))
+        y_batch = Variable(torch.LongTensor(y_batch))
+
+        if torch.cuda.is_available():
+            x1_batch = x1_batch.cuda()
+            x2_batch = x2_batch.cuda()
+            y_batch = y_batch.cuda()
+
+        preds = model(x1_batch, x2_batch)
+        loss = F.cross_entropy(preds, y_batch)
+        running_losses.append(loss.data[0].item())
+
+    avg_loss = sum(running_losses) / len(running_losses)
+
+    return avg_loss
+
+
+def save(model, save_dir, save_prefix, model_name, steps):
+    if not os.path.isdir(save_dir):
+        os.makedirs(save_dir)
+    save_prefix = os.path.join(save_dir, save_prefix)
+    save_path = '{}_{}_steps_{}.pt'.format(save_prefix, model_name, steps)
+    torch.save(model.state_dict(), save_path)
+
+
+def parse_args():
+    parser = argparse.ArgumentParser(description='CNN Text Classification')
+    parser.add_argument('--batch-size', type=int, default=1000, metavar='N',
+                        help='input batch size for training (default: 1000)')
+    parser.add_argument('--epochs', type=int, default=100, metavar='N',
+                        help='number of epochs to train (default: 100)')
+    parser.add_argument('--checkpoint-interval', type=int, default=50, metavar='N',
+                        help='number of step to save the model (default: 50)')
+    parser.add_argument('--lr', type=float, default=0.01, metavar='LR',
+                        help='learning rate (default: 0.01)')
+    parser.add_argument('--embed-size', type=int, default=128, metavar='N',
+                        help='the dimensionality of the embedding space (default: 128)')
+    parser.add_argument('--num-filters', type=int, default=128, metavar='N',
+                        help='the number of filters (default: 128)')
+    parser.add_argument('--no-cuda', action='store_true', default=False,
+                        help='enables CUDA training')
+    parser.add_argument('--model', type=str, default="cnn",
+                        help='the embedding model')
+    parser.add_argument('--save-dir', type=str, default="./checkpoints/",
+                        help='the embedding model')
+    parser.add_argument('--word-vectors', type=str, default="none",
+                        help='the pre-trained word vectors')
+    args = parser.parse_args()
+    args.cuda = not args.no_cuda and torch.cuda.is_available()
+    return args
+
+
 def main(argv=None):
-    # args = parse_args()
+    args = parse_args()
     res = preprocess()
     x1_train, x2_train, y_train, vocab_processor, x1_dev, x2_dev, y_dev = res
 
     print("num positive:", len(y_dev[y_dev == 1]))
     print("num negative:", len(y_dev[y_dev == 0]))
     print("all:", len(y_dev))
+
+    if args.word_vectors == "glove":
+        word_vectors = data._load_glove(vocab_processor, GLOVE_FILE)
+    elif args.word_vectors == "word2vec":
+        word_vectors = data._load_word2vec(vocab_processor, W2V_FILE)
+    else:
+        word_vectors = None
+
+    if args.model == "cnn":
+        model = DualCNN(sequence_length=x1_train.shape[1],
+                        num_classes=2,
+                        vocab_size=len(vocab_processor.vocabulary_),
+                        embed_size=args.embed_size,
+                        word_vectors=word_vectors,
+                        filter_sizes=[3, 4, 5],
+                        num_filters=args.num_filters,
+                        l2_reg=0.01)
+    elif args.model == "mean":
+        model = DualMean(sequence_length=x1_train.shape[1], num_classes=2,
+                         vocab_size=len(vocab_processor.vocabulary_),
+                         embed_size=args.embed_size,
+                         word_vectors=word_vectors,
+                         l2_reg=0.01)
+    else:
+        print("Wrong model!")
+        return 0
+
+    if torch.cuda.is_available():
+        model = model.cuda()
+
+    train(model, x_train, y_train, vocab_processor,
+          x_dev, y_dev, args)
+
+    print("EVALUATION!")
+    print("=======================")
+    model.print_parameters()
+    loss, accuracy = eval(model, x_dev, y_dev, batch_size=args.batch_size)
+    print("Evaluation: loss: {}, accuracy: {}".format(loss, accuracy))
 
 if __name__ == '__main__':
     main()

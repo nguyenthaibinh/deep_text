@@ -3,11 +3,11 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
-class TextNet(nn.Module):
+class DualMean(nn.Module):
 	def __init__(self, sequence_length, vocab_size, embed_size,
 	             word_vectors=None,
 	             num_classes=2, l2_reg=0.0, dropout=0.5):
-		super(TextNet, self).__init__()
+		super(DualMean, self).__init__()
 		self.sequence_length = sequence_length
 		self.vocab_size = vocab_size
 		self.embed_size = embed_size
@@ -16,20 +16,40 @@ class TextNet(nn.Module):
 
 		# Embedding layer
 		if word_vectors is None:
-			print("Use pre-trained word vectors.")
+			print("Use one-hot word vectors.")
+			# Create embedding and context vectors
 			self.embeddings = nn.Embedding(vocab_size, self.embed_size, padding_idx=0)
+			self.contexts = nn.Embedding(vocab_size, self.embed_size, padding_idx=0)
+
+			# Initialize embedding and context vectors
 			nn.init.normal_(self.embeddings.weight, mean=0.0, std=0.01)
+			nn.init.normal_(self.contexts.weight, mean=0.0, std=0.01)
 		else:
+			print("Use pre-trained word vectors.")
 			self.embed_size = word_vectors.shape[1]
 			word_vectors = torch.FloatTensor(word_vectors)
-			self.embeddings = nn.Embedding(vocab_size, self.embed_size, padding_idx=0)
-			self.embeddings.weight = nn.Parameter(word_vectors, requires_grad=False)
 
-		self.fc1 = nn.Linear(self.embed_size, self.embed_size)
-		# self.fc1 = nn.Linear(self.embed_size, num_classes)
-		self.fc2 = nn.Linear(self.embed_size, num_classes)
-		nn.init.normal_(self.fc1.weight, mean=0.0, std=0.01)
-		nn.init.normal_(self.fc2.weight, mean=0.0, std=0.01)
+			# Create embedding and context vectors
+			self.embeddings = nn.Embedding(vocab_size, self.embed_size, padding_idx=0)
+			self.contexts = nn.Embedding(vocab_size, self.embed_size, padding_idx=0)
+
+			# Load pre-trained word vectors
+			self.embeddings.weight = nn.Parameter(word_vectors, requires_grad=False)
+			self.contexts.weight = nn.Parameter(word_vectors, requires_grad=False)
+
+		# Create embedding encoder
+		self.embedding_fc1 = nn.Linear(self.embed_size, self.embed_size)
+		self.embedding_fc2 = nn.Linear(self.embed_size, self.embed_size)
+
+		nn.init.normal_(self.embedding_fc1.weight, mean=0.0, std=0.01)
+		nn.init.normal_(self.embedding_fc2.weight, mean=0.0, std=0.01)
+
+		# Create context encoder
+		self.context_fc1 = nn.Linear(self.embed_size, self.embed_size)
+		self.context_fc2 = nn.Linear(self.embed_size, self.embed_size)
+
+		nn.init.normal_(self.context_fc1.weight, mean=0.0, std=0.01)
+		nn.init.normal_(self.context_fc2.weight, mean=0.0, std=0.01)
 
 		self.print_parameters()
 
@@ -42,22 +62,36 @@ class TextNet(nn.Module):
 		print("num_classes:", self.num_classes)
 		print("l2_reg:", self.l2_reg)
 
-	def forward(self, x):
-		emb = self.embeddings(x)
+	def embedding_encode(self, x):
+		h = self.embeddings(x)
 
-		# Apply convolution and max pooling for each filter size
-		h = torch.mean(emb, dim=1)
+		# Calculate mean vector
+		h = torch.mean(h, dim=1)
 
-		logits = torch.tanh(self.fc1(h))            # [B, class]
+		h = torch.tanh(self.embedding_fc1(h))            # [B, class]
 
-		logits = torch.tanh(self.fc2(logits))
+		h = torch.tanh(self.embedding_fc2(h))
 
-		# logits = F.relu(self.fc2(logits))
+		return h
 
-        # Prediction
-		probs = F.softmax(logits, dim=1)       # [B, class]
+	def context_encode(self, x):
+		h = self.contexts(x)
 
-		classes = torch.max(probs, 1)[1]# [B]
+		# Calculate mean vector
+		h = torch.mean(h, dim=1)
 
-		return probs, classes
+		h = torch.tanh(self.context_fc1(h))            # [B, class]
 
+		h = torch.tanh(self.context_fc2(h))
+
+		return h
+
+	def forward(self, x1, x2):
+		h1 = self.embedding_encode(x1)
+		h2 = self.context_encode(x2)
+
+		dot_prod = (h1 * h2).sum(dim=1)
+
+		preds = F.sigmoid(dot_prod)
+
+		return preds

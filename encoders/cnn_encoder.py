@@ -3,11 +3,11 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
-class CNNEncoder(nn.Module):
+class DualCNN(nn.Module):
 	def __init__(self, sequence_length, vocab_size, embed_size,
 	             filter_sizes, num_filters, word_vectors=None,
-	             num_classes=2, l2_reg=0.0, dropout=0.5,):
-		super(CNNEncoder, self).__init__()
+	             num_classes=2, l2_reg=0.0, dropout=0.5):
+		super(DualCNN, self).__init__()
 		self.sequence_length = sequence_length
 		self.vocab_size = vocab_size
 		self.embed_size = embed_size
@@ -19,27 +19,59 @@ class CNNEncoder(nn.Module):
 		# Embedding layer
 		if word_vectors is None:
 			print("Use one-hot word vectors.")
+			# Create embedding and context vectors
 			self.embeddings = nn.Embedding(vocab_size, self.embed_size, padding_idx=0)
+			self.contexts = nn.Embedding(vocab_size, self.embed_size, padding_idx=0)
+
+			# Initialize embedding and context vectors
 			nn.init.normal_(self.embeddings.weight, mean=0.0, std=0.01)
+			nn.init.normal_(self.contexts.weight, mean=0.0, std=0.01)
 		else:
 			print("Use pre-trained word vectors.")
 			self.embed_size = word_vectors.shape[1]
 			word_vectors = torch.FloatTensor(word_vectors)
+
+			# Create embedding and context vectors
 			self.embeddings = nn.Embedding(vocab_size, self.embed_size, padding_idx=0)
+			self.contexts = nn.Embedding(vocab_size, self.embed_size, padding_idx=0)
+
+			# Load pre-trained word vectors
 			self.embeddings.weight = nn.Parameter(word_vectors, requires_grad=False)
+			self.contexts.weight = nn.Parameter(word_vectors, requires_grad=False)
 
-		self.convs = nn.ModuleList([nn.Conv1d(in_channels=self.embed_size,
-		                                      out_channels=num_filters,
-		                                      kernel_size=filter_size)
-		                           for filter_size in filter_sizes])
+		# Create embedding encoder
+		self.embedding_encoder = nn.ModuleList(
+		                        [nn.Conv1d(in_channels=self.embed_size,
+		                                   out_channels=num_filters,
+		                                   kernel_size=filter_size)
+		                        for filter_size in filter_sizes])
 
-		self.dropout = nn.Dropout(dropout)
+		self.embedding_fc1 = nn.Linear(num_filters * len(filter_sizes),
+		                               num_filters * len(filter_sizes))
+		self.embedding_fc2 = nn.Linear(num_filters * len(filter_sizes),
+		                               num_filters * len(filter_sizes))
 
-		self.fc1 = nn.Linear(num_filters * len(filter_sizes), num_filters * len(filter_sizes))
-		# self.fc1 = nn.Linear(num_filters * len(filter_sizes), num_classes)
-		self.fc2 = nn.Linear(num_filters * len(filter_sizes), num_classes)
-		nn.init.normal_(self.fc1.weight, mean=0.0, std=0.01)
-		nn.init.normal_(self.fc2.weight, mean=0.0, std=0.01)
+		nn.init.normal_(self.embedding_fc1.weight, mean=0.0, std=0.01)
+		nn.init.normal_(self.embedding_fc2.weight, mean=0.0, std=0.01)
+
+		# Create context encoder
+		self.context_encoder = nn.ModuleList(
+		                        [nn.Conv1d(in_channels=self.embed_size,
+		                                   out_channels=num_filters,
+		                                   kernel_size=filter_size)
+		                        for filter_size in filter_sizes])
+
+		self.context_fc1 = nn.Linear(num_filters * len(filter_sizes),
+		                             num_filters * len(filter_sizes))
+		self.context_fc2 = nn.Linear(num_filters * len(filter_sizes),
+		                             num_filters * len(filter_sizes))
+
+		nn.init.normal_(self.context_fc1.weight, mean=0.0, std=0.01)
+		nn.init.normal_(self.context_fc2.weight, mean=0.0, std=0.01)
+
+		# Create dropout layer
+		self.embedding_dropout = nn.Dropout(dropout)
+		self.context_dropout = nn.Dropout(dropout)
 
 		self.print_parameters()
 
@@ -54,13 +86,13 @@ class CNNEncoder(nn.Module):
 		print("num_classes:", self.num_classes)
 		print("l2_reg:", self.l2_reg)
 
-	def forward(self, x):
-		emb = self.embeddings(x)
-		emb = emb.transpose(1, 2)
+	def embedding_encode(self, x):
+		h = self.embeddings(x)
+		h = h.transpose(1, 2)
 
 		feature_list = []
 		for conv in self.convs:
-			h = torch.tanh(conv(emb))
+			h = torch.tanh(conv(h))
 			h = F.max_pool1d(h, h.size(2))
 			feature_list.append(h)
 
@@ -68,12 +100,32 @@ class CNNEncoder(nn.Module):
 		h = torch.squeeze(h, -1)
 		h = self.dropout(h)
 
-		logits = torch.tanh(self.fc1(h))
-		logits = torch.tanh(self.fc2(logits))
+		logits = torch.tanh(self.embedding_fc1(h))
+		logits = torch.tanh(self.embedding_fc2(logits))
 
-        # Prediction
-		probs = F.softmax(logits, dim=1)       # [B, class]
+	def context_encode(self, x):
+		h = self.contexts(x)
+		h = h.transpose(1, 2)
 
-		classes = torch.max(probs, 1)[1]# [B]
+		feature_list = []
+		for conv in self.convs:
+			h = torch.tanh(conv(h))
+			h = F.max_pool1d(h, h.size(2))
+			feature_list.append(h)
 
-		return probs, classes
+		h = torch.cat(feature_list, dim=1)
+		h = torch.squeeze(h, -1)
+		h = self.dropout(h)
+
+		logits = torch.tanh(self.context_fc1(h))
+		logits = torch.tanh(self.context_fc2(logits))
+
+	def forward(self, x1, x2):
+		h1 = self.embedding_encode(x1)
+		h2 = self.context_encode(x2)
+
+		dot_prod = (h1 * h2).sum(dim=1)
+
+		preds = F.sigmoid(dot_prod)
+
+		return preds
