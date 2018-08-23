@@ -10,12 +10,15 @@ import os
 from encoders.cnn_encoder import DualCNN
 from encoders.mean_encoder import DualMean
 
+GLOVE_FILE = "./data/word_vectors/glove.840B.300d.txt"
+W2V_FILE = "./data/word_vectors/GoogleNews-vectors-negative300.bin"
 
-def preprocess():
+
+def preprocess(top=0):
     print("Load data.")
     # X_text, Y, _, _ = data.load_data_and_labels_from_csv(dataset="yelp_review_polarity")
     # print("Y:", Y[:10])
-    X_1, X_2, Y = data.load_quora_data()
+    X_1, X_2, Y = data.load_quora_data(top=top)
     print("X_1.size:", len(X_1))
     print("X_2.size:", len(X_2))
     print("Y.size:", len(Y))
@@ -154,10 +157,12 @@ def save(model, save_dir, save_prefix, model_name, steps):
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description='CNN Text Classification')
+    parser = argparse.ArgumentParser(description='Dual Text Encoders')
     parser.add_argument('--batch-size', type=int, default=1000, metavar='N',
                         help='input batch size for training (default: 1000)')
-    parser.add_argument('--epochs', type=int, default=100, metavar='N',
+    parser.add_argument('--top', type=int, default=0, metavar='N',
+                        help='Get top rows of the quora data (default: 0)')
+    parser.add_argument('--epochs', type=int, default=10, metavar='N',
                         help='number of epochs to train (default: 100)')
     parser.add_argument('--checkpoint-interval', type=int, default=50, metavar='N',
                         help='number of step to save the model (default: 50)')
@@ -182,7 +187,7 @@ def parse_args():
 
 def main(argv=None):
     args = parse_args()
-    res = preprocess()
+    res = preprocess(top=args.top)
     x1_train, x2_train, y_train, vocab_processor, x1_dev, x2_dev, y_dev = res
 
     print("num positive:", len(y_dev[y_dev == 1]))
@@ -218,14 +223,14 @@ def main(argv=None):
     if torch.cuda.is_available():
         model = model.cuda()
 
-    train(model, x_train, y_train, vocab_processor,
-          x_dev, y_dev, args)
+    train(model, x1_train, x2_train, y_train, vocab_processor,
+          x1_dev, x2_dev, y_dev, args)
 
     print("EVALUATION!")
     print("=======================")
     model.print_parameters()
-    loss, accuracy = eval(model, x_dev, y_dev, batch_size=args.batch_size)
-    print("Evaluation: loss: {}, accuracy: {}".format(loss, accuracy))
+    loss = eval(model, x1_dev, x2_dev, y_dev, batch_size=args.batch_size)
+    print("Evaluation: loss: {}".format(loss))
 
 if __name__ == '__main__':
     main()

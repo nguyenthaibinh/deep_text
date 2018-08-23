@@ -9,9 +9,14 @@ BASE_DIR = dirname(abspath(__file__))
 DATA_DIR = join(BASE_DIR, 'data')
 
 
-def load_quora_data():
+def load_quora_data(top=0):
 	df = pd.read_csv(QUORA_DATA_FILE, sep='\t')
 	df = df.dropna()
+
+	if isinstance(top, int) and (top > 0):
+		print("Get top {} rows of the quora.".format(top))
+		df = df[:top]
+
 	text1 = list(df['question1'])
 	text2 = list(df['question2'])
 	is_duplicate = list(df['is_duplicate'])
