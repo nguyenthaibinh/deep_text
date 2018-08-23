@@ -117,8 +117,6 @@ def train(model, x1_train, x2_train, y_train, vocab_processor,
             print("classes:", classes.data)
             print("y_batch:", y_batch.data)
 
-            return
-
         epoch_loss = sum(running_losses) / len(running_losses)
 
         train_loss, train_acc = eval(model, x1_train, x2_train, y_train, batch_size)
@@ -250,11 +248,13 @@ def main(argv=None):
     train(model, x1_train, x2_train, y_train, vocab_processor,
           x1_dev, x2_dev, y_dev, args)
 
+    """
     print("EVALUATION!")
     print("=======================")
     model.print_parameters()
     loss = eval(model, x1_dev, x2_dev, y_dev, batch_size=args.batch_size)
     print("Evaluation: loss: {}".format(loss))
+    """
 
 if __name__ == '__main__':
     main()
