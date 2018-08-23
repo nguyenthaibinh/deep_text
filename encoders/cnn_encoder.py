@@ -87,12 +87,12 @@ class DualCNN(nn.Module):
 		print("l2_reg:", self.l2_reg)
 
 	def embedding_encode(self, x):
-		h = self.embeddings(x)
-		h = h.transpose(1, 2)
+		features = self.embeddings(x)
+		features = features.transpose(1, 2)
 
 		feature_list = []
 		for conv in self.embedding_convs:
-			h = torch.tanh(conv(h))
+			h = torch.tanh(conv(features))
 			h = F.max_pool1d(h, h.size(2))
 			feature_list.append(h)
 
@@ -104,12 +104,12 @@ class DualCNN(nn.Module):
 		logits = torch.tanh(self.embedding_fc2(logits))
 
 	def context_encode(self, x):
-		h = self.contexts(x)
-		h = h.transpose(1, 2)
+		features = self.contexts(x)
+		features = features.transpose(1, 2)
 
 		feature_list = []
 		for conv in self.context_convs:
-			h = torch.tanh(conv(h))
+			h = torch.tanh(conv(features))
 			h = F.max_pool1d(h, h.size(2))
 			feature_list.append(h)
 
