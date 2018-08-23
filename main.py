@@ -114,10 +114,13 @@ def train(model, x1_train, x2_train, y_train, vocab_processor,
             tmp_loss += loss.data[0].item()
             running_losses.append(loss.data[0].item())
 
+            y_truth = y_batch.byte()
+
             print("classes:", classes.data)
             print("y_batch:", y_batch.data)
             print("type(classes):", type(classes))
             print("type(y_batch):", type(y_batch))
+            print("type(y_truth):", type(y_truth))
 
         epoch_loss = sum(running_losses) / len(running_losses)
 
