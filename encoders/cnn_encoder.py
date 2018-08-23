@@ -100,8 +100,10 @@ class DualCNN(nn.Module):
 		h = torch.squeeze(h, -1)
 		h = self.embedding_dropout(h)
 
-		logits = torch.tanh(self.embedding_fc1(h))
-		logits = torch.tanh(self.embedding_fc2(logits))
+		h = torch.tanh(self.embedding_fc1(h))
+		h = torch.tanh(self.embedding_fc2(h))
+
+		return h
 
 	def context_encode(self, x):
 		features = self.contexts(x)
@@ -117,8 +119,10 @@ class DualCNN(nn.Module):
 		h = torch.squeeze(h, -1)
 		h = self.context_dropout(h)
 
-		logits = torch.tanh(self.context_fc1(h))
-		logits = torch.tanh(self.context_fc2(logits))
+		h = torch.tanh(self.context_fc1(h))
+		h = torch.tanh(self.context_fc2(h))
+
+		return h
 
 	def forward(self, x1, x2):
 		h1 = self.embedding_encode(x1)
