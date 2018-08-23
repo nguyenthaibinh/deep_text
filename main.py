@@ -73,6 +73,7 @@ def train(model, x1_train, x2_train, y_train, vocab_processor,
           x1_dev, x2_dev, y_dev, args):
     optimizer = optim.Adam(model.parameters(), lr=args.lr)
     loss_func = nn.BCELoss(weight=None, size_average=False)
+    batch_size = int(args.batch_size)
 
     model.train()
     for epoch in range(args.epochs):
@@ -82,7 +83,7 @@ def train(model, x1_train, x2_train, y_train, vocab_processor,
 
         # Generate batch
         batches = data.batch_iter(list(zip(x1_train, x2_train, y_train)),
-                                  args.batch_size)
+                                  batch_size)
         for batch in batches:
             x1_batch, x2_batch, y_batch = zip(*batch)
             x1_batch = Variable(torch.LongTensor(x1_batch))
@@ -113,9 +114,9 @@ def train(model, x1_train, x2_train, y_train, vocab_processor,
 
         epoch_loss = sum(running_losses) / len(running_losses)
         dev_loss, dev_accuracy = eval(model, x1_dev, x2_dev, y_dev,
-                                      args.batch_size)
+                                      batch_size)
         train_loss, train_accuracy = eval(model, x1_train, x2_train, y_train,
-                                          args.batch_size)
+                                          batch_size)
         print("Epoch: {}, loss: {}, train_accuracy: {:.4f}, dev_accuracy: {:.4f}".format(epoch + 1,
                                                                                  epoch_loss,
                                                                                  train_accuracy,
@@ -134,8 +135,7 @@ def eval(model, x1_dev, x2_dev, y_dev, batch_size):
 
     running_losses = []
 
-    batches = data.batch_iter(list(zip(x1_dev, x2_dev, y_dev)),
-                              batch_size)
+    batches = data.batch_iter(list(zip(x1_dev, x2_dev, y_dev)), batch_size)
     for batch in batches:
         x1_batch, x2_batch, y_batch = zip(*batch)
         x1_batch = Variable(torch.LongTensor(x1_batch))
