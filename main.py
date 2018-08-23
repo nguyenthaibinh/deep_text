@@ -225,7 +225,7 @@ def parse_args():
 def main(argv=None):
     args = parse_args()
     print("args.one_encoder:", args.one_encoder)
-    print("args.dot_product:", args.dot_product)
+    print("args.dot_product:", args.dot_prod)
 
     return
     res = preprocess(top=args.top)
