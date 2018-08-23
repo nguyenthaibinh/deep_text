@@ -207,6 +207,10 @@ def parse_args():
                         help='the number of filters (default: 128)')
     parser.add_argument('--no-cuda', action='store_true', default=False,
                         help='enables CUDA training')
+    parser.add_argument('--one-encoder', action='store_true', default=False,
+                        help='use one encoder')
+    parser.add_argument('--dot-prod', action='store_true', default=False,
+                        help='use dot product at the last layer')
     parser.add_argument('--model', type=str, default="cnn",
                         help='the embedding model')
     parser.add_argument('--save-dir', type=str, default="./checkpoints/",
@@ -220,6 +224,10 @@ def parse_args():
 
 def main(argv=None):
     args = parse_args()
+    print("args.one_encoder:", args.one_encoder)
+    print("args.dot_product:", args.dot_product)
+
+    return
     res = preprocess(top=args.top)
     x1_train, x2_train, y_train, vocab_processor, x1_dev, x2_dev, y_dev = res
 

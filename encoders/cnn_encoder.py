@@ -6,7 +6,8 @@ import torch.nn.functional as F
 class DualCNN(nn.Module):
 	def __init__(self, sequence_length, vocab_size, embed_size,
 	             filter_sizes, num_filters, word_vectors=None,
-	             num_classes=2, l2_reg=0.0, dropout=0.5):
+	             num_classes=2, l2_reg=0.0, dropout=0.5,
+	             n_encoders=2, dot_prod=True):
 		super(DualCNN, self).__init__()
 		self.sequence_length = sequence_length
 		self.vocab_size = vocab_size
@@ -15,6 +16,8 @@ class DualCNN(nn.Module):
 		self.num_filters = num_filters
 		self.num_classes = num_classes
 		self.l2_reg = l2_reg
+		self.n_encoders = n_encoders
+		self.dot_prod = dot_prod
 
 		# Embedding layer
 		if word_vectors is None:
@@ -77,6 +80,9 @@ class DualCNN(nn.Module):
 		self.embedding_dropout = nn.Dropout(dropout)
 		self.context_dropout = nn.Dropout(dropout)
 
+		self.fc = nn.Linear(num_filters * len(filter_sizes), 1)
+		nn.init.normal_(self.fc.weight, mean=0.0, std=0.01)
+
 		self.print_parameters()
 
 	def print_parameters(self):
@@ -89,6 +95,8 @@ class DualCNN(nn.Module):
 		print("num_filters:", self.num_filters)
 		print("num_classes:", self.num_classes)
 		print("l2_reg:", self.l2_reg)
+		print("n_encoders:", self.n_encoders)
+		print("dot_prod:", self.dot_prod)
 
 	def embedding_encode(self, x):
 		features = self.embeddings(x)
@@ -130,9 +138,18 @@ class DualCNN(nn.Module):
 
 	def forward(self, x1, x2):
 		h1 = self.embedding_encode(x1)
-		h2 = self.context_encode(x2)
 
-		dot_prod = (h1 * h2).sum(dim=1)
+		if self.n_encoders == 1:
+			h2 = self.embedding_encode(x2)
+		else:
+			h2 = self.context_encode(x2)
+
+		if self.dot_prod is True:
+			dot_prod = (h1 * h2).sum(dim=1)
+			preds = F.sigmoid(dot_prod)
+		else:
+			dot_prod = self.fc(h1 * h2)
+			preds = F.sigmoid(dot_prod)
 
 		preds = F.sigmoid(dot_prod)
 

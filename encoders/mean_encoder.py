@@ -6,13 +6,16 @@ import torch.nn.functional as F
 class DualMean(nn.Module):
 	def __init__(self, sequence_length, vocab_size, embed_size,
 	             word_vectors=None,
-	             num_classes=2, l2_reg=0.0, dropout=0.5):
+	             num_classes=2, l2_reg=0.0, dropout=0.5,
+	             n_encoders=2, dot_prod=True):
 		super(DualMean, self).__init__()
 		self.sequence_length = sequence_length
 		self.vocab_size = vocab_size
 		self.embed_size = embed_size
 		self.num_classes = num_classes
 		self.l2_reg = l2_reg
+		self.n_encoders = n_encoders
+		self.dot_prod = dot_prod
 
 		# Embedding layer
 		if word_vectors is None:
@@ -57,6 +60,9 @@ class DualMean(nn.Module):
 		nn.init.normal_(self.context_fc1.weight, mean=0.0, std=0.01)
 		nn.init.normal_(self.context_fc2.weight, mean=0.0, std=0.01)
 
+		self.fc = nn.Linear(self.embed_size, 1)
+		nn.init.normal_(self.fc.weight, mean=0.0, std=0.01)
+
 		self.print_parameters()
 
 	def print_parameters(self):
@@ -67,6 +73,8 @@ class DualMean(nn.Module):
 		print("embed_size:", self.embed_size)
 		print("num_classes:", self.num_classes)
 		print("l2_reg:", self.l2_reg)
+		print("n_encoders:", self.n_encoders)
+		print("dot_prod:", self.dot_prod)
 
 	def embedding_encode(self, x):
 		h = self.embeddings(x)
@@ -96,11 +104,18 @@ class DualMean(nn.Module):
 
 	def forward(self, x1, x2):
 		h1 = self.embedding_encode(x1)
-		# h2 = self.embedding_encode(x2)
-		h2 = self.context_encode(x2)
 
-		dot_prod = (h1 * h2).sum(dim=1)
-		preds = F.sigmoid(dot_prod)
+		if self.n_encoders == 1:
+			h2 = self.embedding_encode(x2)
+		else:
+			h2 = self.context_encode(x2)
+
+		if self.dot_prod is True:
+			dot_prod = (h1 * h2).sum(dim=1)
+			preds = F.sigmoid(dot_prod)
+		else:
+			dot_prod = self.fc(h1 * h2)
+			preds = F.sigmoid(dot_prod)
 
 		classes = (preds >= 0.5)
 
