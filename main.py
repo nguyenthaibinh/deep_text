@@ -209,7 +209,7 @@ def parse_args():
                         help='enables CUDA training')
     parser.add_argument('--one-encoder', action='store_true', default=False,
                         help='use one encoder')
-    parser.add_argument('--dot-prod', action='store_true', default=False,
+    parser.add_argument('--dot-prod', action='store_true', default=True,
                         help='use dot product at the last layer')
     parser.add_argument('--model', type=str, default="cnn",
                         help='the embedding model')
