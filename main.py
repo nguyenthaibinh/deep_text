@@ -227,7 +227,6 @@ def main(argv=None):
     print("args.one_encoder:", args.one_encoder)
     print("args.dot_product:", args.dot_prod)
 
-    return
     res = preprocess(top=args.top)
     x1_train, x2_train, y_train, vocab_processor, x1_dev, x2_dev, y_dev = res
 
