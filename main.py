@@ -167,7 +167,7 @@ def parse_args():
                         help='input batch size for training (default: 1000)')
     parser.add_argument('--top', type=int, default=0, metavar='N',
                         help='Get top rows of the quora data (default: 0)')
-    parser.add_argument('--epochs', type=int, default=10, metavar='N',
+    parser.add_argument('--epochs', type=int, default=100, metavar='N',
                         help='number of epochs to train (default: 100)')
     parser.add_argument('--checkpoint-interval', type=int, default=50, metavar='N',
                         help='number of step to save the model (default: 50)')
