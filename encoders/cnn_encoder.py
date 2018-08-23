@@ -32,12 +32,16 @@ class DualCNN(nn.Module):
 			word_vectors = torch.FloatTensor(word_vectors)
 
 			# Create embedding and context vectors
-			self.embeddings = nn.Embedding(vocab_size, self.embed_size, padding_idx=0)
-			self.contexts = nn.Embedding(vocab_size, self.embed_size, padding_idx=0)
+			self.embeddings = nn.Embedding(vocab_size, self.embed_size,
+			                               padding_idx=0)
+			self.contexts = nn.Embedding(vocab_size, self.embed_size,
+			                             padding_idx=0)
 
 			# Load pre-trained word vectors
-			self.embeddings.weight = nn.Parameter(word_vectors, requires_grad=False)
-			self.contexts.weight = nn.Parameter(word_vectors, requires_grad=False)
+			self.embeddings.weight = nn.Parameter(word_vectors,
+			                                      requires_grad=False)
+			self.contexts.weight = nn.Parameter(word_vectors,
+			                                    requires_grad=False)
 
 		# Create embedding encoder
 		self.embedding_convs = nn.ModuleList(

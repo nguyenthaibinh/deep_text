@@ -70,24 +70,24 @@ class DualMean(nn.Module):
 
 	def embedding_encode(self, x):
 		h = self.embeddings(x)
+		print("h.size:", h.size())
 
 		# Calculate mean vector
 		h = torch.mean(h, dim=1)
-
-		h = torch.tanh(self.embedding_fc1(h))            # [B, class]
-
+		print("h.size:", h.size())
+		h = torch.tanh(self.embedding_fc1(h))
 		h = torch.tanh(self.embedding_fc2(h))
 
 		return h
 
 	def context_encode(self, x):
 		h = self.contexts(x)
+		print("h.size:", h.size())
 
 		# Calculate mean vector
 		h = torch.mean(h, dim=1)
-
-		h = torch.tanh(self.context_fc1(h))            # [B, class]
-
+		print("h.size:", h.size())
+		h = torch.tanh(self.context_fc1(h))
 		h = torch.tanh(self.context_fc2(h))
 
 		return h
@@ -97,7 +97,6 @@ class DualMean(nn.Module):
 		h2 = self.context_encode(x2)
 
 		dot_prod = (h1 * h2).sum(dim=1)
-
 		preds = F.sigmoid(dot_prod)
 
 		return preds

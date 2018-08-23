@@ -114,6 +114,8 @@ def train(model, x1_train, x2_train, y_train, vocab_processor,
             tmp_loss += loss.data[0].item()
             running_losses.append(loss.data[0].item())
 
+            return 0
+
         train_loss = sum(running_losses) / len(running_losses)
         dev_loss = eval(model, x1_dev, x2_dev, y_dev, batch_size)
 
