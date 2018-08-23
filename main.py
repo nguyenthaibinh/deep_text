@@ -173,16 +173,9 @@ def eval(model, x1_dev, x2_dev, y_dev, batch_size, verbose=False):
         tmp_corrects = (classes.data == y_truth.data).sum()
         corrects += tmp_corrects
 
-        print("classes:", classes)
-        print("y_truth:", y_truth)
-        print("classes.size:", classes.size())
-        print("y_truth.size:", y_truth.size())
-        print("tmp_corrects:", tmp_corrects)
-
     size = len(x1_dev)
     avg_loss = sum(running_losses) / len(running_losses)
-    accuracy = (1.0 * corrects / size)
-    print("corrects: {}, size: {}.".format(corrects, size))
+    accuracy = float(corrects) / float(size)
 
     return avg_loss, accuracy
 
