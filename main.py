@@ -114,6 +114,11 @@ def train(model, x1_train, x2_train, y_train, vocab_processor,
             tmp_loss += loss.data[0].item()
             running_losses.append(loss.data[0].item())
 
+            print("classes:", classes)
+            print("y_batch:", y_batch)
+
+            return
+
         epoch_loss = sum(running_losses) / len(running_losses)
 
         train_loss, train_acc = eval(model, x1_train, x2_train, y_train, batch_size)
@@ -131,7 +136,7 @@ def train(model, x1_train, x2_train, y_train, vocab_processor,
     return 0
 
 
-def eval(model, x1_dev, x2_dev, y_dev, batch_size):
+def eval(model, x1_dev, x2_dev, y_dev, batch_size, verbose=False):
     model.eval()
     loss_func = nn.BCELoss(weight=None, size_average=False)
 
