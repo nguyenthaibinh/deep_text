@@ -98,7 +98,7 @@ class DualCNN(nn.Module):
 
 		h = torch.cat(feature_list, dim=1)
 		h = torch.squeeze(h, -1)
-		h = self.dropout(h)
+		h = self.embedding_dropout(h)
 
 		logits = torch.tanh(self.embedding_fc1(h))
 		logits = torch.tanh(self.embedding_fc2(logits))
@@ -115,7 +115,7 @@ class DualCNN(nn.Module):
 
 		h = torch.cat(feature_list, dim=1)
 		h = torch.squeeze(h, -1)
-		h = self.dropout(h)
+		h = self.context_dropout(h)
 
 		logits = torch.tanh(self.context_fc1(h))
 		logits = torch.tanh(self.context_fc2(logits))
