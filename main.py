@@ -87,7 +87,7 @@ def train(model, x1_train, x2_train, y_train, vocab_processor,
             x1_batch, x2_batch, y_batch = zip(*batch)
             x1_batch = Variable(torch.LongTensor(x1_batch))
             x2_batch = Variable(torch.LongTensor(x2_batch))
-            y_batch = Variable(torch.LongTensor(y_batch))
+            y_batch = Variable(torch.FloatTensor(y_batch))
 
             print("x1_batch.size:", x1_batch.size())
             print("x2_batch.size:", x2_batch.size())
