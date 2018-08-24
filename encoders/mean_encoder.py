@@ -69,6 +69,10 @@ class DualMean(nn.Module):
 		self.context1_bn = nn.BatchNorm1d(self.embed_size)
 		self.context2_bn = nn.BatchNorm1d(self.embed_size)
 
+		# Create dropout layer
+		self.embedding_dropout = nn.Dropout(dropout)
+		self.context_dropout = nn.Dropout(dropout)
+
 		self.print_parameters()
 
 	def print_parameters(self):
@@ -91,6 +95,8 @@ class DualMean(nn.Module):
 		h = self.embedding1_bn(h)
 		h = torch.tanh(h)
 		h = self.embedding2_bn(h)
+
+		h = self.embedding_dropout(h)
 		# print("h.size:", h.size())
 		h = torch.tanh(self.embedding_fc1(h))
 		# h = torch.tanh(self.embedding_fc2(h))
@@ -107,6 +113,7 @@ class DualMean(nn.Module):
 
 		h = torch.tanh(h)
 		h = self.context2_bn(h)
+		h = self.context_dropout(h)
 		# print("h.size:", h.size())
 		h = torch.tanh(self.context_fc1(h))
 		# h = torch.tanh(self.context_fc2(h))

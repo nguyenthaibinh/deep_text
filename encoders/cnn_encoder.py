@@ -133,6 +133,16 @@ class DualCNN(nn.Module):
 		                                   kernel_size=filter_size)
 		                        for filter_size in filter_sizes])
 
+		# Create context encoder
+		self.context_module = nn.ModuleList(
+		                        [nn.Sequential(nn.Conv1d(in_channels=self.embed_size,
+		                                                 out_channels=num_filters,
+		                                                 kernel_size=filter_size),
+		                        			   nn.MaxPool1d(kernel_size=filter_size),
+		                        			   nn.ReLU(),
+		                        			   nn.BatchNorm1d(num_filters * len(filter_sizes)))
+		                        for filter_size in filter_sizes])
+
 		self.context_fc1 = nn.Linear(num_filters * len(filter_sizes),
 		                             num_filters * len(filter_sizes))
 		self.context_fc2 = nn.Linear(num_filters * len(filter_sizes),
