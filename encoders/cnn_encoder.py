@@ -193,6 +193,7 @@ class DualCNN(nn.Module):
 
 		feature_list = []
 
+		"""
 		for module in self.embedding_modules:
 			h = module(features)
 			feature_list.append(h)
@@ -201,7 +202,6 @@ class DualCNN(nn.Module):
 			h = F.relu(conv(features))
 			h = F.max_pool1d(h, h.size(2))
 			feature_list.append(h)
-		"""
 
 		h = torch.cat(feature_list, dim=1)
 		h = torch.squeeze(h, -1)
@@ -219,6 +219,7 @@ class DualCNN(nn.Module):
 
 		feature_list = []
 
+		"""
 		for module in self.context_modules:
 			h = module(features)
 			feature_list.append(h)
@@ -228,7 +229,6 @@ class DualCNN(nn.Module):
 			h = F.relu(conv(features))
 			h = F.max_pool1d(h, h.size(2))
 			feature_list.append(h)
-		"""
 
 		h = torch.cat(feature_list, dim=1)
 		h = torch.squeeze(h, -1)
