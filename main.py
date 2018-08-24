@@ -283,11 +283,14 @@ def main(argv=None):
     if torch.cuda.is_available():
         x1_train = x1_train.cuda()
 
-    print("model.embeddings:", model.embeddings(x1_train))
-    print("model.contexts:", model.contexts(x1_train))
+    print("model.embeddings:", model.embeddings(x1_train).mean(dim=1))
+    print("model.contexts:", model.contexts(x1_train).mean(dim=1))
 
     print("model.embeddings:", model.embeddings(x1_train).shape)
     print("model.contexts:", model.contexts(x1_train).shape)
+
+    print("model.embeddings:", model.embeddings(x1_train).mean(dim=1).shape)
+    print("model.contexts:", model.contexts(x1_train).mean(dim=1).shape)
 
     """
     print("EVALUATION!")
