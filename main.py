@@ -5,11 +5,11 @@ from torch import optim
 import numpy as np
 import data
 from torch.autograd import Variable
-import torch.nn.functional as F
 import argparse
 import os
 from encoders.cnn_encoder import DualCNN
 from encoders.mean_encoder import DualMean
+from encoders.max_encoder import DualMax
 
 GLOVE_FILE = "./data/word_vectors/glove.840B.300d.txt"
 W2V_FILE = "./data/word_vectors/GoogleNews-vectors-negative300.bin"
@@ -259,6 +259,13 @@ def main(argv=None):
                          word_vectors=word_vectors,
                          l2_reg=0.01, one_encoder=args.one_encoder,
                          dot_prod=args.dot_prod)
+    elif args.model == "max":
+        model = DualMax(sequence_length=x1_train.shape[1], num_classes=2,
+                        vocab_size=len(vocab_processor.vocabulary_),
+                        embed_size=args.embed_size,
+                        word_vectors=word_vectors,
+                        l2_reg=0.01, one_encoder=args.one_encoder,
+                        dot_prod=args.dot_prod)
     else:
         print("Wrong model!")
         return 0
