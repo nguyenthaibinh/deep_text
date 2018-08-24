@@ -291,6 +291,10 @@ def main(argv=None):
     print("x1_contexts.size:", x1_contexts.size())
     print("x2_embeddings.size:", x2_embeddings.size())
 
+    x = x1_contexts * x2_embeddings.transpose()
+
+    print("x.size:", x.size())
+
     """
     print("EVALUATION!")
     print("=======================")
