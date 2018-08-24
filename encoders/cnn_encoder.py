@@ -118,6 +118,16 @@ class DualCNN(nn.Module):
 		                                   kernel_size=filter_size)
 		                        for filter_size in filter_sizes])
 
+		# Create context encoder
+		self.embedding_modules = nn.ModuleList(
+		                        [nn.Sequential(nn.Conv1d(in_channels=self.embed_size,
+		                                                 out_channels=num_filters,
+		                                                 kernel_size=filter_size),
+		                        			   nn.MaxPool1d(kernel_size=filter_size),
+		                        			   nn.ReLU(),
+		                        			   nn.BatchNorm1d(num_filters * len(filter_sizes)))
+		                        for filter_size in filter_sizes])
+
 		self.embedding_fc1 = nn.Linear(num_filters * len(filter_sizes),
 		                               num_filters * len(filter_sizes))
 		self.embedding_fc2 = nn.Linear(num_filters * len(filter_sizes),
@@ -134,7 +144,7 @@ class DualCNN(nn.Module):
 		                        for filter_size in filter_sizes])
 
 		# Create context encoder
-		self.context_module = nn.ModuleList(
+		self.context_modules = nn.ModuleList(
 		                        [nn.Sequential(nn.Conv1d(in_channels=self.embed_size,
 		                                                 out_channels=num_filters,
 		                                                 kernel_size=filter_size),
@@ -178,10 +188,16 @@ class DualCNN(nn.Module):
 		features = features.transpose(1, 2)
 
 		feature_list = []
+
+		for module in self.embedding_modules:
+			h = module(features)
+			feature_list.append(h)
+		"""
 		for conv in self.embedding_convs:
 			h = F.relu(conv(features))
 			h = F.max_pool1d(h, h.size(2))
 			feature_list.append(h)
+		"""
 
 		h = torch.cat(feature_list, dim=1)
 		h = torch.squeeze(h, -1)
@@ -197,10 +213,17 @@ class DualCNN(nn.Module):
 		features = features.transpose(1, 2)
 
 		feature_list = []
+
+		for module in self.context_modules:
+			h = module(features)
+			feature_list.append(h)
+
+		"""
 		for conv in self.context_convs:
 			h = F.relu(conv(features))
 			h = F.max_pool1d(h, h.size(2))
 			feature_list.append(h)
+		"""
 
 		h = torch.cat(feature_list, dim=1)
 		h = torch.squeeze(h, -1)
