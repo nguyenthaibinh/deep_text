@@ -286,11 +286,11 @@ def main(argv=None):
     print("model.embeddings:", model.embeddings(x1_train).mean(dim=1))
     print("model.contexts:", model.contexts(x1_train).mean(dim=1))
 
-    print("model.embeddings:", model.embeddings(x1_train).shape)
-    print("model.contexts:", model.contexts(x1_train).shape)
+    print("model.embeddings:", model.embeddings(x1_train).size())
+    print("model.contexts:", model.contexts(x1_train).size())
 
-    print("model.embeddings:", model.embeddings(x1_train).mean(dim=1).shape)
-    print("model.contexts:", model.contexts(x1_train).mean(dim=1).shape)
+    print("model.embeddings:", model.embeddings(x1_train).mean(dim=1).size())
+    print("model.contexts:", model.contexts(x1_train).mean(dim=1).size())
 
     """
     print("EVALUATION!")
