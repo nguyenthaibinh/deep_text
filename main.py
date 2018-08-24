@@ -279,18 +279,17 @@ def main(argv=None):
     train(model, x1_train, x2_train, y_train, vocab_processor,
           x1_dev, x2_dev, y_dev, args)
 
-    x1_train = Variable(torch.LongTensor(x1_train))
+    x1_dev = Variable(torch.LongTensor(x1_dev))
+    x2_dev = Variable(torch.LongTensor(x2_dev))
     if torch.cuda.is_available():
-        x1_train = x1_train.cuda()
+        x1_dev = x1_dev.cuda()
+        x2_dev = x2_dev.cuda()
 
-    print("model.embeddings:", model.embeddings(x1_train).mean(dim=1))
-    print("model.contexts:", model.contexts(x1_train).mean(dim=1))
+    x1_contexts = model.contexts(x1_dev).mean(dim=1)
+    x2_embeddings = model.embeddings(x2_dev).mean(dim=1)
 
-    print("model.embeddings:", model.embeddings(x1_train).size())
-    print("model.contexts:", model.contexts(x1_train).size())
-
-    print("model.embeddings:", model.embeddings(x1_train).mean(dim=1).size())
-    print("model.contexts:", model.contexts(x1_train).mean(dim=1).size())
+    print("x1_contexts.size:", x1_contexts.size())
+    print("x2_embeddings.size:", x2_embeddings.size())
 
     """
     print("EVALUATION!")
