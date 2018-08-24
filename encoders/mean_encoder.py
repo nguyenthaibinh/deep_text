@@ -103,12 +103,12 @@ class DualMean(nn.Module):
 		return h
 
 	def forward(self, x1, x2):
-		h1 = self.embedding_encode(x1)
+		h1 = self.context_encode(x1)
 
 		if self.one_encoder is True:
-			h2 = self.embedding_encode(x2)
-		else:
 			h2 = self.context_encode(x2)
+		else:
+			h2 = self.embedding_encode(x2)
 
 		if self.dot_prod is True:
 			dot_prod = (h1 * h2).sum(dim=1)
