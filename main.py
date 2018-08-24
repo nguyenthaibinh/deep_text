@@ -279,6 +279,9 @@ def main(argv=None):
     train(model, x1_train, x2_train, y_train, vocab_processor,
           x1_dev, x2_dev, y_dev, args)
 
+    print("model.embeddings:", model.embeddings)
+    print("model.contexts:", model.contexts)
+
     """
     print("EVALUATION!")
     print("=======================")
