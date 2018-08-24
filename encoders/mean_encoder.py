@@ -63,6 +63,12 @@ class DualMean(nn.Module):
 		self.fc = nn.Linear(self.embed_size, 1)
 		nn.init.normal_(self.fc.weight, mean=0.0, std=0.01)
 
+		self.embedding1_bn = nn.BatchNorm1d(self.embed_size)
+		self.embedding2_bn = nn.BatchNorm1d(self.embed_size)
+
+		self.context1_bn = nn.BatchNorm1d(self.embed_size)
+		self.context2_bn = nn.BatchNorm1d(self.embed_size)
+
 		self.print_parameters()
 
 	def print_parameters(self):
@@ -82,7 +88,9 @@ class DualMean(nn.Module):
 
 		# Calculate mean vector
 		h = torch.mean(h, dim=1)
+		h = self.embedding1_bn(h)
 		h = torch.tanh(h)
+		h = self.embedding2_bn(h)
 		# print("h.size:", h.size())
 		h = torch.tanh(self.embedding_fc1(h))
 		# h = torch.tanh(self.embedding_fc2(h))
@@ -95,7 +103,10 @@ class DualMean(nn.Module):
 
 		# Calculate mean vector
 		h = torch.mean(h, dim=1)
+		h = self.context1_bn(h)
+
 		h = torch.tanh(h)
+		h = self.context2_bn(h)
 		# print("h.size:", h.size())
 		h = torch.tanh(self.context_fc1(h))
 		# h = torch.tanh(self.context_fc2(h))
