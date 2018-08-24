@@ -124,8 +124,7 @@ class DualCNN(nn.Module):
 		                                                 out_channels=num_filters,
 		                                                 kernel_size=filter_size),
 		                        			   nn.MaxPool1d(kernel_size=filter_size),
-		                        			   nn.ReLU(),
-		                        			   nn.BatchNorm1d(num_filters * len(filter_sizes)))
+		                        			   nn.ReLU())
 		                        for filter_size in filter_sizes])
 
 		self.embedding_fc1 = nn.Linear(num_filters * len(filter_sizes),
@@ -149,8 +148,7 @@ class DualCNN(nn.Module):
 		                                                 out_channels=num_filters,
 		                                                 kernel_size=filter_size),
 		                        			   nn.MaxPool1d(kernel_size=filter_size),
-		                        			   nn.ReLU(),
-		                        			   nn.BatchNorm1d(num_filters * len(filter_sizes)))
+		                        			   nn.ReLU())
 		                        for filter_size in filter_sizes])
 
 		self.context_fc1 = nn.Linear(num_filters * len(filter_sizes),
@@ -167,6 +165,12 @@ class DualCNN(nn.Module):
 
 		self.fc = nn.Linear(num_filters * len(filter_sizes), 1)
 		nn.init.normal_(self.fc.weight, mean=0.0, std=0.01)
+
+		self.embedding1_bn = nn.BatchNorm1d(num_filters * len(filter_sizes))
+		self.embedding2_bn = nn.BatchNorm1d(num_filters * len(filter_sizes))
+
+		self.context1_bn = nn.BatchNorm1d(num_filters * len(filter_sizes))
+		self.context2_bn = nn.BatchNorm1d(num_filters * len(filter_sizes))
 
 		self.print_parameters()
 
@@ -204,7 +208,8 @@ class DualCNN(nn.Module):
 		h = self.embedding_dropout(h)
 
 		h = torch.tanh(self.embedding_fc1(h))
-		# h = torch.tanh(self.embedding_fc2(h))
+		h = self.embedding1_bn(h)
+		h = torch.tanh(self.embedding_fc2(h))
 
 		return h
 
@@ -230,7 +235,8 @@ class DualCNN(nn.Module):
 		h = self.context_dropout(h)
 
 		h = torch.tanh(self.context_fc1(h))
-		# h = torch.tanh(self.context_fc2(h))
+		h = self.context1_bn(h)
+		h = torch.tanh(self.context_fc2(h))
 
 		return h
 
