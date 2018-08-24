@@ -286,6 +286,9 @@ def main(argv=None):
     print("model.embeddings:", model.embeddings(x1_train))
     print("model.contexts:", model.contexts(x1_train))
 
+    print("model.embeddings:", model.embeddings(x1_train).shape)
+    print("model.contexts:", model.contexts(x1_train).shape)
+
     """
     print("EVALUATION!")
     print("=======================")
