@@ -292,7 +292,7 @@ def main(argv=None):
     print("x2_embeddings.size:", x2_embeddings.size())
     print("x2_embeddings.transpose(0, 1).size:", x2_embeddings.transpose(0, 1).size())
 
-    x = x1_contexts * x2_embeddings.transpose(0, 1)
+    x = torch.matmul(x1_contexts * x2_embeddings.transpose(0, 1))
 
     print("x.size:", x.size())
 
