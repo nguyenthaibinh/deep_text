@@ -3,6 +3,71 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
+class CNNEncoder(nn.Module):
+	def __init__(self, sequence_length, vocab_size, embed_size,
+	             filter_sizes, num_filters, word_vectors=None,
+	             num_classes=2, l2_reg=0.0, dropout=0.5):
+		super(DualCNN, self).__init__()
+		self.sequence_length = sequence_length
+		self.vocab_size = vocab_size
+		self.embed_size = embed_size
+		self.filter_sizes = filter_sizes
+		self.num_filters = num_filters
+		self.num_classes = num_classes
+		self.l2_reg = l2_reg
+
+		# Embedding layer
+		if word_vectors is None:
+			print("Use one-hot word vectors.")
+			# Create embedding and context vectors
+			self.embeddings = nn.Embedding(vocab_size, self.embed_size, padding_idx=0)
+
+			# Initialize embedding and context vectors
+			nn.init.normal_(self.embeddings.weight, mean=0.0, std=0.01)
+		else:
+			print("Use pre-trained word vectors.")
+			self.embed_size = word_vectors.shape[1]
+			word_vectors = torch.FloatTensor(word_vectors)
+
+			# Create embedding and context vectors
+			self.embeddings = nn.Embedding(vocab_size, self.embed_size,
+			                               padding_idx=0)
+
+		# Create embedding encoder
+		self.convs = nn.ModuleList(
+		                        [nn.Conv1d(in_channels=self.embed_size,
+		                                   out_channels=num_filters,
+		                                   kernel_size=filter_size)
+		                        for filter_size in filter_sizes])
+
+		self.fc1 = nn.Linear(num_filters * len(filter_sizes),
+		                     num_filters * len(filter_sizes))
+		self.fc2 = nn.Linear(num_filters * len(filter_sizes),
+		                     num_filters * len(filter_sizes))
+
+		nn.init.normal_(self.fc1.weight, mean=0.0, std=0.01)
+		nn.init.normal_(self.fc2.weight, mean=0.0, std=0.01)
+
+	def forward(self, x):
+		features = self.embeddings(x)
+		features = features.transpose(1, 2)
+
+		feature_list = []
+		for conv in self.convs:
+			h = F.relu(conv(features))
+			h = F.max_pool1d(h, h.size(2))
+			feature_list.append(h)
+
+		h = torch.cat(feature_list, dim=1)
+		h = torch.squeeze(h, -1)
+		h = self.embedding_dropout(h)
+
+		h = torch.tanh(self.fc1(h))
+		# h = torch.tanh(self.embedding_fc2(h))
+
+		return h
+
+
 class DualCNN(nn.Module):
 	def __init__(self, sequence_length, vocab_size, embed_size,
 	             filter_sizes, num_filters, word_vectors=None,
