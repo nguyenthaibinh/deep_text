@@ -290,6 +290,7 @@ def main(argv=None):
 
     print("x1_contexts.size:", x1_contexts.size())
     print("x2_embeddings.size:", x2_embeddings.size())
+    print("x2_embeddings.transpose(0, 1).size:", x2_embeddings.transpose(0, 1).size())
 
     x = x1_contexts * x2_embeddings.transpose(0, 1)
 
