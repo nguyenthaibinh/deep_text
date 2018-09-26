@@ -1,3 +1,3 @@
-## A library for learning text representations
+## A library for learning text representations using Deep Learning
 
-The library use Convolutional nets-based Encoder-Encoder architecture.
+
