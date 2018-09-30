@@ -3,15 +3,12 @@ import numpy as np
 from os.path import dirname, abspath, join, exists
 from gensim.models import KeyedVectors
 
-QUORA_DATA_FILE = "./data/quora/quora_duplicate_questions_standardized.tsv"
+QUORA_DATA_FILE = "./quora_duplicate_questions_preprocessed.tsv"
 ENRON_DATA_FILE = "./data/quora/enron_message_pairs.csv"
 
-BASE_DIR = dirname(abspath(__file__))
-DATA_DIR = join(BASE_DIR, 'data')
 
-
-def load_quora_data(top=0):
-	df = pd.read_csv(QUORA_DATA_FILE, sep='\t')
+def load_quora_data(file_name=QUORA_DATA_FILE, top=0):
+	df = pd.read_csv(file_name, sep='\t')
 	df = df.dropna()
 
 	n_len = df.shape[0]
@@ -28,8 +25,8 @@ def load_quora_data(top=0):
 	return text1, text2, is_duplicate
 
 
-def load_enron_data(top=0):
-    df = pd.read_csv(ENRON_DATA_FILE, sep=':##:')
+def load_enron_data(file_name=ENRON_DATA_FILE, top=0):
+    df = pd.read_csv(file_name, sep=':##:')
     df = df.dropna()
 
     n_len = df.shape[0]

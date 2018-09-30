@@ -1,21 +1,32 @@
+import os
+import sys
+pardir = os.path.dirname(os.getcwd())
+print("pardir:", pardir)
+sys.path.append(pardir)
+
 from tensorflow.contrib import learn
 import torch
 from torch import nn
 from torch import optim
 import numpy as np
-import data
+from data import data
 from torch.autograd import Variable
 import argparse
-import os
-from models.encoders import (CNNEncoder, MeanEncoder, MaxEncoder,
-                             LSTMEncoder)
+from encoders.cnn_encoder import CNNEncoder
+from encoders.mean_encoder import MeanEncoder
+from encoders.max_encoder import MaxEncoder
+from encoders.lstm_encoder import LSTMEncoder
 from models.dual_encoders import DualEncoders
-from utils import write_vocab, torch_summarize, _write_elapsed_time
+from utils import write_vocab, _write_elapsed_time
 import time
 from sacred import Experiment
 
 from tensorboard_logger import configure, log_value
 
+QUORA_DIR = "../../datasets/pre/quora/"
+DATA_FILE = os.path.join(QUORA_DIR, "quora_duplicate_questions_preprocessed.tsv")
+VOCAB_FILE_1 = os.path.join(QUORA_DIR, "vocab1.csv")
+VOCAB_FILE_2 = os.path.join(QUORA_DIR, "vocab1.csv")
 GLOVE_FILE = "./data/word_vectors/glove.840B.300d.txt"
 W2V_FILE = "./data/word_vectors/GoogleNews-vectors-negative300.bin"
 TEST_SPLIT = 0.1
@@ -83,7 +94,7 @@ def preprocess(top=0):
 def preprocess1(top=0, val_rate=0.1, test_rate=0.1):
     # X_text, Y, _, _ = data.load_data_and_labels_from_csv(dataset="yelp_review_polarity")
     # print("Y:", Y[:10])
-    X_1, X_2, Y = data.load_quora_data(top=top)
+    X_1, X_2, Y = data.load_quora_data(file_name=DATA_FILE, top=top)
 
     max_X1 = max([len(x.split(" ")) for x in X_1])
     max_X2 = max([len(x.split(" ")) for x in X_2])
@@ -95,8 +106,8 @@ def preprocess1(top=0, val_rate=0.1, test_rate=0.1):
     X2 = np.array(list(vocab2.fit_transform(X_2)))
     Y = np.array(Y)
 
-    write_vocab(vocab1, "./data/quora/vocab1.csv")
-    write_vocab(vocab2, "./data/quora/vocab2.csv")
+    write_vocab(vocab1, VOCAB_FILE_1)
+    write_vocab(vocab2, VOCAB_FILE_2)
 
     print("==================")
     print("Train/Test split")
@@ -129,9 +140,11 @@ def preprocess1(top=0, val_rate=0.1, test_rate=0.1):
 def train(model, x1_train, x2_train, y_train,
           x1_val, x2_val, y_val,
           x1_test, x2_test, y_test, args):
-    exp = Experiment(name='dual_text', save_dir='./logs/quora')
+    """
+    exp = Experiment(name='dual_text')
     exp.tag({'learning_rate': args.lr, 'weight_decay': args.l2,
              'batch_size': args.batch_size, 'embed_dim': args.embed_dim})
+    """
     # optimizer = optim.Adam(model.parameters())
     optimizer = optim.Adam(model.parameters(), lr=args.lr,
                            weight_decay=args.l2)
@@ -173,9 +186,11 @@ def train(model, x1_train, x2_train, y_train,
         log_info = {'loss_train': loss_train, 'acc_train': acc_train,
                     'loss_dev': loss_val, 'acc_dev': acc_val,
                     'loss_test': loss_test, 'acc_test': acc_test}
+        """
         exp.log({'loss_train': loss_train, 'acc_train': acc_train,
                  'loss_dev': loss_val, 'acc_dev': acc_val,
                  'loss_test': loss_test, 'acc_test': acc_test})
+        """
 
         for tag, value in log_info.items():
             # logger.scalar_summary(tag, value, epoch + 1)
@@ -308,7 +323,7 @@ def parse_args():
     args.multi_gpu = not args.no_cuda and args.multi_gpu and (torch.cuda.device_count() > 1)
     return args
 
-@exSac.automain
+
 def main(argv=None):
     args = parse_args()
 

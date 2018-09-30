@@ -4,165 +4,127 @@ import torch.nn.functional as F
 
 
 class MaxEncoder(nn.Module):
-	def __init__(self, vocab_size, embed_size, word_vectors=None,
-	             dropout=0.2):
+	def __init__(self, vocab_size, embed_dim, word_vectors=None,
+				 hidden_dim=200, dropout=0.2):
 		super(MaxEncoder, self).__init__()
 		self.vocab_size = vocab_size
-		self.embed_size = embed_size
+		self.embed_dim = embed_dim
 
 		# Embedding layer
 		if word_vectors is None:
 			print("Use one-hot word vectors.")
 			# Create embedding and context vectors
-			self.embeddings = nn.Embedding(vocab_size, self.embed_size,
-			                               padding_idx=0)
+			self.embeddings = nn.Embedding(vocab_size + 1, self.embed_dim,
+										   padding_idx=0)
 
 			# Initialize embedding and context vectors
 			nn.init.normal_(self.embeddings.weight, mean=0.0, std=0.01)
 		else:
 			print("Use pre-trained word vectors.")
-			self.embed_size = word_vectors.shape[1]
+			self.embed_dim = word_vectors.shape[1]
 			word_vectors = torch.FloatTensor(word_vectors)
 
 			# Create embedding and context vectors
-			self.embeddings = nn.Embedding(vocab_size, self.embed_size,
-			                               padding_idx=0)
+			self.embeddings = nn.Embedding(vocab_size + 1, self.embed_dim,
+										   padding_idx=0)
 
 			# Load pre-trained word vectors
 			self.embeddings.weight = nn.Parameter(word_vectors,
-			                                      requires_grad=False)
+												  requires_grad=False)
+
+		# Fully connected layers
+		if hidden_dim is None:
+			self.enc_dim = self.embed_dim
+		else:
+			self.enc_dim = hidden_dim
 
 		# Fully connected layers
 		self.fc_layers = nn.Sequential(
-		                    nn.Linear(embed_size, embed_size),
-		                    nn.Linear(embed_size, embed_size),
-		                    nn.Linear(embed_size, embed_size))
+							nn.BatchNorm1d(self.embed_dim),
+							nn.Linear(self.embed_dim, self.enc_dim),
+							nn.ReLU(),
+							nn.Dropout(dropout),
+
+							nn.BatchNorm1d(self.enc_dim),
+							nn.Linear(self.enc_dim, self.enc_dim),
+							nn.ReLU(),
+							nn.Dropout(dropout),
+
+							nn.BatchNorm1d(self.enc_dim),
+							nn.Linear(self.enc_dim, self.enc_dim),
+							nn.ReLU(),
+							nn.Dropout(dropout)
+							)
+
+		self.enc_dim = self.embed_dim
 
 	def forward(self, x):
 		h = self.embeddings(x)
 		# print("h.size:", h.size())
 
 		# Calculate mean vector
-		h = torch.mean(h, dim=1)
+		h = torch.max(h, dim=1)
 		h = self.fc_layers(h)
 
 		return h
 
 
-class DualMax(nn.Module):
-	def __init__(self, sequence_length, vocab_size, embed_size,
-	             word_vectors=None,
-	             num_classes=2, l2_reg=0.0, dropout=0.5,
-	             one_encoder=False, dot_prod=False):
-		super(DualMax, self).__init__()
-		self.sequence_length = sequence_length
-		self.vocab_size = vocab_size
-		self.embed_size = embed_size
-		self.num_classes = num_classes
-		self.l2_reg = l2_reg
-		self.one_encoder = one_encoder
-		self.dot_prod = dot_prod
+class LSTMEncoder(nn.Module):
+	def __init__(self, vocab_size, embed_dim, hidden_dim=300,
+				 word_vectors=None, dropout=0.2):
+		super(LSTMEncoder, self).__init__()
+		self.embed_dim = embed_dim
+		self.hidden_dim = hidden_dim
 
 		# Embedding layer
 		if word_vectors is None:
 			print("Use one-hot word vectors.")
 			# Create embedding and context vectors
-			self.embeddings = nn.Embedding(vocab_size, self.embed_size,
+			self.embeddings = nn.Embedding(vocab_size + 1, self.embed_dim,
 			                               padding_idx=0)
-			self.contexts = nn.Embedding(vocab_size, self.embed_size,
-			                             padding_idx=0)
 
 			# Initialize embedding and context vectors
 			nn.init.normal_(self.embeddings.weight, mean=0.0, std=0.01)
-			nn.init.normal_(self.contexts.weight, mean=0.0, std=0.01)
 		else:
 			print("Use pre-trained word vectors.")
-			self.embed_size = word_vectors.shape[1]
+			self.embed_dim = word_vectors.shape[1]
 			word_vectors = torch.FloatTensor(word_vectors)
 
 			# Create embedding and context vectors
-			self.embeddings = nn.Embedding(vocab_size, self.embed_size,
-			                               padding_idx=0)
-			self.contexts = nn.Embedding(vocab_size, self.embed_size,
-			                             padding_idx=0)
+			self.embeddings = nn.Embedding(vocab_size + 1, self.embed_dim,
+										   padding_idx=0)
 
 			# Load pre-trained word vectors
 			self.embeddings.weight = nn.Parameter(word_vectors,
-			                                      requires_grad=False)
-			self.contexts.weight = nn.Parameter(word_vectors,
-			                                    requires_grad=False)
+												  requires_grad=False)
 
-		# Create embedding encoder
-		self.embedding_fc1 = nn.Linear(self.embed_size, self.embed_size)
-		self.embedding_fc2 = nn.Linear(self.embed_size, self.embed_size)
+		self.rnn = nn.LSTM(self.embed_dim, self.hidden_dim)
 
-		nn.init.normal_(self.embedding_fc1.weight, mean=0.0, std=0.01)
-		nn.init.normal_(self.embedding_fc2.weight, mean=0.0, std=0.01)
+		self.enc_dim = self.hidden_dim
 
-		# Create context encoder
-		self.context_fc1 = nn.Linear(self.embed_size, self.embed_size)
-		self.context_fc2 = nn.Linear(self.embed_size, self.embed_size)
+		# Fully connected layers
+		self.fc_layers = nn.Sequential(
+							# nn.BatchNorm1d(self.enc_dim),
+							nn.Linear(self.enc_dim, self.enc_dim)
+							# nn.ReLU()
+							# nn.Dropout(dropout)
 
-		nn.init.normal_(self.context_fc1.weight, mean=0.0, std=0.01)
-		nn.init.normal_(self.context_fc2.weight, mean=0.0, std=0.01)
+							# nn.BatchNorm1d(self.hidden_dim),
+							# nn.Linear(self.hidden_dim, self.hidden_dim),
+							# nn.ReLU(),
+							# nn.Dropout(dropout),
 
-		self.fc = nn.Linear(self.embed_size, 1)
-		nn.init.normal_(self.fc.weight, mean=0.0, std=0.01)
+							# nn.BatchNorm1d(self.hidden_dim),
+							# nn.Linear(self.hidden_dim, self.hidden_dim),
+							# nn.ReLU(),
+							# nn.Dropout(dropout)
+							)
 
-		self.print_parameters()
-
-	def print_parameters(self):
-		print("TextNet information:")
-		print("=======================================")
-		print("sequence length:", self.sequence_length)
-		print("vocab_size:", self.vocab_size)
-		print("embed_size:", self.embed_size)
-		print("num_classes:", self.num_classes)
-		print("l2_reg:", self.l2_reg)
-		print("one_encoder:", self.one_encoder)
-		print("dot_prod:", self.dot_prod)
-
-	def embedding_encode(self, x):
-		h = self.embeddings(x)
-		# print("h.size:", h.size())
-
-		# Calculate mean vector
-		h = torch.max(h, dim=1)
-		h = torch.tanh(h)
-		# print("h.size:", h.size())
-		h = torch.tanh(self.embedding_fc1(h))
-		# h = torch.tanh(self.embedding_fc2(h))
-
+	def forward(self, x):
+		embeds = self.embeddings(x)
+		h, (h0, c0) = self.rnn(embeds)
+		h = h.mean(dim=1)
+		h = h.contiguous()
+		# h = h.view(-1, h.shape[2])
+		# print("h.view(-1, h.shape[2]).size:", h.size())
 		return h
-
-	def context_encode(self, x):
-		h = self.contexts(x)
-		# print("h.size:", h.size())
-
-		# Calculate mean vector
-		h = torch.max(h, dim=1)
-		h = torch.tanh(h)
-		# print("h.size:", h.size())
-		h = torch.tanh(self.context_fc1(h))
-		# h = torch.tanh(self.context_fc2(h))
-
-		return h
-
-	def forward(self, x1, x2):
-		h1 = self.embedding_encode(x1)
-
-		if self.one_encoder is True:
-			h2 = self.embedding_encode(x2)
-		else:
-			h2 = self.context_encode(x2)
-
-		if self.dot_prod is True:
-			dot_prod = (h1 * h2).sum(dim=1)
-			preds = F.sigmoid(dot_prod)
-		else:
-			dot_prod = self.fc(h1 * h2)
-			preds = F.sigmoid(dot_prod)
-
-		classes = (preds >= 0.5)
-
-		return preds, classes
