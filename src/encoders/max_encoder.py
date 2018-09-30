@@ -3,6 +3,52 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
+class MaxEncoder(nn.Module):
+	def __init__(self, vocab_size, embed_size, word_vectors=None,
+	             dropout=0.2):
+		super(MaxEncoder, self).__init__()
+		self.vocab_size = vocab_size
+		self.embed_size = embed_size
+
+		# Embedding layer
+		if word_vectors is None:
+			print("Use one-hot word vectors.")
+			# Create embedding and context vectors
+			self.embeddings = nn.Embedding(vocab_size, self.embed_size,
+			                               padding_idx=0)
+
+			# Initialize embedding and context vectors
+			nn.init.normal_(self.embeddings.weight, mean=0.0, std=0.01)
+		else:
+			print("Use pre-trained word vectors.")
+			self.embed_size = word_vectors.shape[1]
+			word_vectors = torch.FloatTensor(word_vectors)
+
+			# Create embedding and context vectors
+			self.embeddings = nn.Embedding(vocab_size, self.embed_size,
+			                               padding_idx=0)
+
+			# Load pre-trained word vectors
+			self.embeddings.weight = nn.Parameter(word_vectors,
+			                                      requires_grad=False)
+
+		# Fully connected layers
+		self.fc_layers = nn.Sequential(
+		                    nn.Linear(embed_size, embed_size),
+		                    nn.Linear(embed_size, embed_size),
+		                    nn.Linear(embed_size, embed_size))
+
+	def forward(self, x):
+		h = self.embeddings(x)
+		# print("h.size:", h.size())
+
+		# Calculate mean vector
+		h = torch.mean(h, dim=1)
+		h = self.fc_layers(h)
+
+		return h
+
+
 class DualMax(nn.Module):
 	def __init__(self, sequence_length, vocab_size, embed_size,
 	             word_vectors=None,

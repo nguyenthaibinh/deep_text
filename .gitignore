@@ -2,10 +2,8 @@
 *.txt
 *.bin
 *.csv
-datasets/*
-data/*
 *.pyc
 *.gz
 *.zip
 *.tar
-
+*.tsv

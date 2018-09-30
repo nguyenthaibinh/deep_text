@@ -3,7 +3,8 @@ import numpy as np
 from os.path import dirname, abspath, join, exists
 from gensim.models import KeyedVectors
 
-QUORA_DATA_FILE = "./data/quora/quora_duplicate_questions.tsv"
+QUORA_DATA_FILE = "./data/quora/quora_duplicate_questions_standardized.tsv"
+ENRON_DATA_FILE = "./data/quora/enron_message_pairs.csv"
 
 BASE_DIR = dirname(abspath(__file__))
 DATA_DIR = join(BASE_DIR, 'data')
@@ -25,6 +26,23 @@ def load_quora_data(top=0):
 	is_duplicate = list(df['is_duplicate'])
 
 	return text1, text2, is_duplicate
+
+
+def load_enron_data(top=0):
+    df = pd.read_csv(ENRON_DATA_FILE, sep=':##:')
+    df = df.dropna()
+
+    n_len = df.shape[0]
+    print("n_len:", n_len)
+
+    if isinstance(top, int) and (top > 0) and (top < n_len):
+        print("Get top {} rows of the message pairs.".format(top))
+        df = df[:top]
+
+    text1 = list(df['request'])
+    text2 = list(df['response'])
+
+    return text1, text2
 
 
 def batch_iter(data, batch_size, shuffle=True):
@@ -61,7 +79,8 @@ def _load_word2vec(vocab_processor, wordvector_file):
         if word in word2vec.vocab:
             vector = word2vec[word]
         else:
-            vector = np.random.normal(scale=0.2, size=vector_size) # random vector
+            # vector = np.random.normal(scale=0.2, size=vector_size) # random vector
+            vector = np.zeros(vector_size)
 
         word_vectors.append(vector)
 
@@ -93,7 +112,8 @@ def _load_glove(vocab_processor, wordvector_file):
         if word in glove_vocab:
             vector = np.array(glove_model[word], dtype=float)
         else:
-            vector = np.random.normal(scale=0.2, size=vector_size) # random vector
+            # vector = np.random.normal(scale=0.2, size=vector_size) # random vector
+            vector = np.zeros(vector_size)
 
         word_vectors.append(vector)
 
