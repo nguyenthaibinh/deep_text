@@ -1,8 +1,9 @@
 import os
 import sys
 pardir = os.path.dirname(os.getcwd())
-print("pardir:", pardir)
-sys.path.append(pardir)
+src_dir = os.path.join(pardir, 'src')
+print("src_dir:", src_dir)
+sys.path.append(src_dir)
 
 from tensorflow.contrib import learn
 import torch
