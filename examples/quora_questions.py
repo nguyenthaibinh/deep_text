@@ -26,7 +26,7 @@ from tensorboard_logger import configure, log_value
 QUORA_DIR = "../../datasets/pre/quora/"
 DATA_FILE = os.path.join(QUORA_DIR, "quora_duplicate_questions_preprocessed.tsv")
 VOCAB_FILE_1 = os.path.join(QUORA_DIR, "vocab1.csv")
-VOCAB_FILE_2 = os.path.join(QUORA_DIR, "vocab1.csv")
+VOCAB_FILE_2 = os.path.join(QUORA_DIR, "vocab2.csv")
 GLOVE_FILE = "./data/word_vectors/glove.840B.300d.txt"
 W2V_FILE = "./data/word_vectors/GoogleNews-vectors-negative300.bin"
 TEST_SPLIT = 0.1
